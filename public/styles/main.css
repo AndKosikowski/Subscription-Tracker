@@ -10,3 +10,37 @@ body {
 .page-container {
     margin-top: 75px;
 }
+
+.logo{
+    width: 100px;
+    height: 100px;
+}
+
+span.row{
+    border: 5px;
+    border-color: #800000;
+    border-style: solid;
+    padding: 10px 5px;
+    text-align: center;
+    margin: 20px 0px;
+}
+
+.col h3 {
+    color: purple;
+    font-weight: bolder;
+    white-space: nowrap;
+    overflow: hidden;
+    width: 20vw;
+    text-align: center;
+}
+
+.col div {
+    font-size: 1.5rem;
+    font-weight: bolder;
+    position: relative;
+    top: 15px;
+}
+
+.col {
+    padding: 0 5px;
+}
