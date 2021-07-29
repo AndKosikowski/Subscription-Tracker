@@ -44,3 +44,22 @@ span.row{
 .col {
     padding: 0 5px;
 }
+
+#deleteAccount {
+    display: block;
+    margin: auto;
+    background: #3700ff;
+    color: white;
+}
+
+#notifications {
+    display: block;
+    margin: auto;
+}
+
+.container {
+    display: block;
+    position: relative;
+    cursor: pointer;
+    font-size: 20px;
+  }
