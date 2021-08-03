@@ -4,13 +4,12 @@
 
 var rhit = rhit || {};
 
-rhit.functionName = function () {
+rhit.calendarManager = null;
 
-};
 
 rhit.MainPageController = class {
 	constructor() {
-
+		rhit.calendarManager = new rhit.CalendarCreator();
 	}
 
 }
@@ -32,8 +31,10 @@ rhit.AuthController = class {
 
 	}
 }
+// https://fullcalendar.io/docs
 
-rhit.CalendarCreator = function() {
+rhit.CalendarCreator = class {
+	constructor() {
 	document.addEventListener('DOMContentLoaded', function() {
 		var calendarEl = document.getElementById('calendar');
 		var calendar = new FullCalendar.Calendar(calendarEl, {
@@ -43,21 +44,32 @@ rhit.CalendarCreator = function() {
 			window.location.href = "/manage.html"
 		  }
 		});
+		calendar.addEvent({
+				title: 'Netflix',
+				start: '2021-08-12',
+				end: '2021-08-12'
+		});
+		calendar.addEvent({
+			title: 'Amazon',
+			start: '2021-08-14',
+			end: '2021-08-14'
+	});
 		calendar.render();
 	  });
+	}
 }
 
 rhit.main = function () {
-	console.log("Ready");
-	rhit.CalendarCreator();
-	calendar.addEvent(calendarEl, {
-		events: [
-			{title: 'Netflix',
-			allDay: true,
-			start: '2021-08-03',
-			end: '2021-08-03'}
-		]
-	});
+	if (document.querySelector("#mainPage")) {
+		new rhit.MainPageController();
+	}
+	if (document.querySelector("#subscriptionPage")) {
+		new rhit.SubscriptionPageController();
+	}
+	if (document.querySelector("#accountPage")) {
+		new rhit.AccountPageController();
+	}
+
 };
 
 
