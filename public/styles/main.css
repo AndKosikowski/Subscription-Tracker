@@ -5,6 +5,7 @@ body {
 .navbar {
     background-color: #3700ff;
     color: white;
+    z-index: 5;
 }
 
 .page-container {
@@ -48,7 +49,7 @@ span.row{
 #deleteAccount {
     display: block;
     margin: auto;
-    background: #3700ff;
+    background: darkred;
     color: white;
 }
 
