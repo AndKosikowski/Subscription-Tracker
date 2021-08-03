@@ -41,6 +41,10 @@ rhit.CalendarCreator = class {
 		  initialView: 'dayGridMonth',
 		  navLinks: true,
 		  navLinkDayClick: function() {
+			window.location.href = "/manage.html"//Replace with close up of day with all subscriptions
+		  },
+		  eventClick: function(eventInfo) {
+		
 			window.location.href = "/manage.html"
 		  }
 		});
