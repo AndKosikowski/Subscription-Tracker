@@ -73,7 +73,14 @@ rhit.main = function () {
 	if (document.querySelector("#accountPage")) {
 		new rhit.AccountPageController();
 	}
-
+	const subscriptions = document.querySelectorAll(".subscription");
+	console.log(subscriptions);
+	for(i = 0; i < subscriptions.length; i++) {
+		subscriptions[i].addEventListener("click", (event) => {
+			console.log(subscriptions[i]);
+			console.log(event.target.innerHTML);
+		});
+	}
 };
 
 

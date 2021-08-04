@@ -18,7 +18,7 @@
   </nav>
   <div id="subscriptionPage" class="container page-container">
     
-    <span class="row flex-nowrap"> <!--Span maybe used for subscription boxes?-->
+    <span class="row flex-nowrap subscription"> <!--Span maybe used for subscription boxes?-->
       <div class="col">
         <img class="logo" src="logos/netflix.jpg" alt="Netflix Logo">
       </div>
@@ -37,6 +37,37 @@
     </span>
 
     <span class="row flex-nowrap"> <!--Span maybe used for subscription boxes?-->
+      <div class="col">
+        <img class="logo" src="logos/netflix.jpg" alt="Netflix Logo">
+      </div>
+      <div class="col">
+        <div class="form-group">
+          <label for="subName" class="bmd-label-floating">Name</label>
+          <input type="subName" class="form-control" id="subName">
+        </div>
+        <div class="form-group">
+          <label for="cost" class="bmd-label-floating" placeholder="$8.50">Cost</label>
+          <input type="cost" class="form-control" id="cost">
+        </div>
+      </div>
+      <div class="col">
+        <div class="form-group">
+          <label for="renewDate" class="bmd-label-floating">Renewal Date</label>
+          <input type="date" class="form-control" id="renewDate">
+        </div>
+      </div>
+      <div class="col">
+        <div class="form-group">
+          <label for="interval" class="bmd-label-floating">Interval</label>
+          <select type="name" class="form-control" id="interval">
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+          </select>
+        </div>
+      </div>
+    </span>
+
+    <span class="row flex-nowrap subscription"> <!--Span maybe used for subscription boxes?-->
       <div class="col">
         <img class="logo" src="logos/amazon.png" alt="Amazon Logo">
       </div>
