@@ -7,69 +7,30 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons">
   <link rel="stylesheet" href="styles/bootstrap-material-design.min.css">
   <link rel="stylesheet" href="styles/main.css">
-  <!-- https://fullcalendar.io/docs/initialize-globals -->
-  <link href='fullcalendar/main.css' rel='stylesheet' />
-  <script src='fullcalendar/main.js'></script>
   <title>Subscription Tracker</title>
 </head>
 
 <body>
-  
   <nav class="navbar navbar-dark fixed-top">
-    <a class="navbar-brand" href="index.html">Calendar</a>
-    <a class="navbar-brand" href="manage.html">Manage Subscriptions</a>
-    <a class="navbar-brand" href="account.html">Account Settings</a>
+    <a class="navbar-brand" href="#">Subscription Tracker</a>
   </nav>
-  <div id="mainPage" class="container page-container">
-    <div id='calendar'></div>
-
-    <span class="row flex-nowrap"> <!--Span maybe used for subscription boxes?-->
-      <div class="col">
-        <img class="logo" src="logos/netflix.jpg" alt="Netflix Logo">
-      </div>
-      <div class="col">
-        <h3>Netflix Blarg Blarg BLARG BLARG</h3>
-        <div>$8.50</div>
-      </div>
-      <div class="col">
-        <h3>Renews:</h3>
-        <div>8/12/21</div>
-      </div>
-      <div class="col">
-        <h3>Interval:</h3>
-        <div>Monthly</div>
-      </div>
-    </span>
-
-    <span class="row flex-nowrap"> <!--Span maybe used for subscription boxes?-->
-      <div class="col">
-        <img class="logo" src="logos/amazon.png" alt="Amazon Logo">
-      </div>
-      <div class="col">
-        <h3>Amazon</h3>
-        <div>$9.50</div>
-      </div>
-      <div class="col">
-        <h3>Renews:</h3>
-        <div>8/14/21</div>
-      </div>
-      <div class="col">
-        <h3>Interval:</h3>
-        <div>Monthly</div>
-      </div>
-    </span>
-
-
+  <div id="loginPage" class="container page-container">
+    <img src="images/rose.jpg" alt="Rose-Hulman Logo" id="roseImg">
+    <button type="button" id="roseFireButton" class="btn btn-primary">SIGN IN WITH ROSEFIRE</button>
   </div>
+
+
+  
   <script src="scripts/jquery.min.js"></script>
   <script src="scripts/popper.js"></script>
   <script src="scripts/bootstrap-material-design.js"></script>
   <script>$("body").bootstrapMaterialDesign();</script>
   <script src="/__/firebase/7.18.0/firebase-app.js"></script>
   <script src="/__/firebase/7.18.0/firebase-analytics.js"></script>
-  <script src="/__/firebase/7.18.0/firebase-auth.js"></script>
   <script src="/__/firebase/7.18.0/firebase-firestore.js"></script>
+  <script src="/__/firebase/7.18.0/firebase-auth.js"></script>
   <script src="/__/firebase/init.js"></script>
+  <script src="scripts/rosefire.min.js"></script>
   <script src="scripts/main.js"></script>
 </body>
 

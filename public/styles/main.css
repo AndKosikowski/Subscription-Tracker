@@ -26,14 +26,14 @@ body {
     margin: 20px 0px;
 } */
 
-span{
+/* span{
     border: 5px;
     border-color: #800000;
     border-style: solid;
     padding: 10px 5px;
     text-align: center;
     margin: 20px 0px;
-}
+} */
 
 .col h3 {
     color: purple;
@@ -55,11 +55,28 @@ span{
     padding: 0 5px;
 }
 
+
+#roseImg{
+    max-width: 350px;
+    margin: 20px auto;
+    display: block;
+}
+
 #deleteAccount {
     display: block;
     margin: auto;
     background: darkred;
     color: white;
+}
+
+#roseFireButton {
+    display: block;
+    margin: 60px auto;
+    color: white;
+    background: #800000;
+    font-size: 1.1em;
+    padding: 10px 30px;
+    border-radius: 5px;
 }
 
 
@@ -97,8 +114,11 @@ svg{
     font-size: 20px;
 }
 
-#subscriptionPage .container{
+#subscriptionPage.container{
     max-width: 95vw;
+}
+#mainPage.container{
+    max-width: 85vw;
 }
 
 .subscription{
@@ -109,6 +129,8 @@ svg{
     text-align: center;
     margin: 20px 0px;
 }
+
+
 
 #subscriptionPage .bmd-form-group{
     padding-top:0;

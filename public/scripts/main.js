@@ -4,12 +4,25 @@
 
 var rhit = rhit || {};
 
+rhit.FB_COLLECTION_SUBSCRIPTIONTRACKER = "Subscription-Tracker";
+rhit.fbAuthManager = null;
 rhit.calendarManager = null;
 
+
+rhit.SubscriptionPageController() = class{
+	constructor(id,name,cost,interval,date){
+		this.id = id;
+		this.name = name;
+		this.cost = cost;
+		this.interval = interval;
+		this.date = date;
+	}
+}
 
 rhit.MainPageController = class {
 	constructor() {
 		rhit.calendarManager = new rhit.CalendarCreator();
+		console.log("calendar?");
 	}
 
 }
@@ -26,17 +39,79 @@ rhit.AccountPageController = class {
 	}
 }
 
-rhit.AuthController = class {
+rhit.FbAuthManager = class {
 	constructor() {
+		this._user = null;
+	}
+
+	beginListening(changeListener) {
+		firebase.auth().onAuthStateChanged((user) => {
+			this._user = user;
+			changeListener();
+		});
+	}
+
+	signIn() {
+		console.log("login");
+
+		Rosefire.signIn("6d2940da-c084-494f-920e-89dc67d673a2", (err, rfUser) => {
+		if (err) {
+	 	 	console.log("Rosefire error!", err);
+	  		return;
+		}
+		console.log("Rosefire success!", rfUser);
+
+		firebase.auth().signInWithCustomToken(rfUser.token).catch((rror) => {
+			const errorCode = error.code;
+			const errorMessage = error.message;
+			if (errorCode === 'auth/invalid-custom-token') {
+				alert('The token you provided is not valid.');
+			} else{
+				console.error("custom auth error", errorCode, errorMessage);
+			}
+		});
+  		});	
+	}
+
+	signOut() {
+		firebase.auth().signOut().catch((error) => {
+			console.log("Sign out error");
+		});
+	}
+	get isSignedIn() {
+		return !!this._user;
+	}
+	get uid() {
+		return this._user.uid;
+	}
+}
+
+rhit.LoginPageController = class {
+	constructor() {
+		document.querySelector("#roseFireButton").onclick = (event) => {
+			rhit.fbAuthManager.signIn();
+		};
 
 	}
 }
+
+rhit.checkForRedirects = function() {
+
+	if (document.querySelector("#loginPage") && rhit.fbAuthManager.isSignedIn) {
+		window.location.href = "main.html"
+	}
+
+	if (!document.querySelector("#loginPage") && !rhit.fbAuthManager.isSignedIn) {
+		window.location.href = "index.html"
+	}
+};
 // https://fullcalendar.io/docs
 
 rhit.CalendarCreator = class {
 	constructor() {
-	document.addEventListener('DOMContentLoaded', function() {
+		console.log("hello?");
 		var calendarEl = document.getElementById('calendar');
+		console.log("hello?");
 		var calendar = new FullCalendar.Calendar(calendarEl, {
 		  initialView: 'dayGridMonth',
 		  navLinks: true,
@@ -48,6 +123,7 @@ rhit.CalendarCreator = class {
 			window.location.href = "/manage.html"
 		  }
 		});
+		console.log("hello?");
 		calendar.addEvent({
 				title: 'Netflix',
 				start: '2021-08-12',
@@ -59,11 +135,10 @@ rhit.CalendarCreator = class {
 			end: '2021-08-14'
 	});
 		calendar.render();
-	  });
 	}
 }
 
-rhit.main = function () {
+rhit.initializePage = function(){
 	if (document.querySelector("#mainPage")) {
 		new rhit.MainPageController();
 	}
@@ -73,6 +148,9 @@ rhit.main = function () {
 	if (document.querySelector("#accountPage")) {
 		new rhit.AccountPageController();
 	}
+	if (document.querySelector("#loginPage")){
+		new rhit.LoginPageController();
+	}
 	const subscriptions = document.querySelectorAll(".subscription");
 	console.log(subscriptions);
 	for(i = 0; i < subscriptions.length; i++) {
@@ -81,6 +159,16 @@ rhit.main = function () {
 			console.log(event.target.innerHTML);
 		});
 	}
+}
+
+rhit.main = function () {
+	rhit.fbAuthManager = new rhit.FbAuthManager();
+	rhit.fbAuthManager.beginListening(() => {
+		console.log("auth change callback fired");
+		console.log("isSignedIn = ",rhit.fbAuthManager.isSignedIn);
+		rhit.checkForRedirects();
+		rhit.initializePage();
+	});
 };
 
 
