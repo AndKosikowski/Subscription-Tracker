@@ -5,11 +5,16 @@
 var rhit = rhit || {};
 
 rhit.FB_COLLECTION_SUBSCRIPTIONTRACKER = "Subscription-Tracker";
+rhit.FB_KEY_NAME = "Name"
+rhit.FB_KEY_COST = "Cost"
+rhit.FB_KEY_INTERVAL = "Interval"
+rhit.FB_KEY_RENEWAL_DATE = "Renewal"
+rhit.FB_KEY_LAST_TOUCHED = "LastTouched"
 rhit.fbAuthManager = null;
 rhit.calendarManager = null;
 
 
-rhit.SubscriptionPageController() = class{
+rhit.Subscription = class{
 	constructor(id,name,cost,interval,date){
 		this.id = id;
 		this.name = name;
@@ -18,6 +23,65 @@ rhit.SubscriptionPageController() = class{
 		this.date = date;
 	}
 }
+
+rhit.SubscriptionsManager = class {
+	constructor(uid) {
+		this._uid = uid;
+		console.log("Created Subscriptions Manager");
+		this._documentSnapshots = [];
+		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_SUBSCRIPTIONTRACKER);
+		this._unsubscribe = null;
+	}
+
+	add(name,cost,interval,date) {
+		this._ref.add({
+			[rhit.FB_KEY_NAME]: name,
+			[rhit.FB_KEY_COST]: cost,
+			[rhit.FB_KEY_INTERVAL]: interval,
+			[rhit.FB_KEY_RENEWAL_DATE]: date,
+			[rhit.FB_KEY_LAST_TOUCHED]: firebase.firestore.Timestamp.now()
+		})
+		.then(function (docRef) {
+			console.log("document written with ID: ", docRef.id);
+		})
+		.catch(function (docRef) {
+			console.error("Error adding document: ", error);
+		})
+	}
+
+	beginListening(changeListener) {
+
+		let query = this._ref.orderBy(rhit.FB_KEY_LAST_TOUCHED, "desc");
+
+		this._unsubscribe = query.onSnapshot((querySnapshot) => {
+			console.log("Subscription Update:");
+
+			this._documentSnapshots = querySnapshot.docs;
+
+			changeListener();
+		});
+	}
+
+	stopListening() {
+		this._unsubscribe();
+	}
+
+	update(id, quote, movie) {}
+
+	delete(id) {}
+
+	get length() {
+		return this._documentSnapshots.length;
+	}
+	getMovieQuoteAtIndex(index) {
+		const docSnapshot = this._documentSnapshots[index];
+		const mq = new rhit.MovieQuote(docSnapshot.id,
+			docSnapshot.get(rhit.FB_KEY_QUOTE),
+			docSnapshot.get(rhit.FB_KEY_MOVIE));
+		return mq;
+	}
+}
+
 
 rhit.MainPageController = class {
 	constructor() {
