@@ -17,7 +17,16 @@ body {
     height: 100px;
 }
 
-span.row{
+/* span.row{
+    border: 5px;
+    border-color: #800000;
+    border-style: solid;
+    padding: 10px 5px;
+    text-align: center;
+    margin: 20px 0px;
+} */
+
+span{
     border: 5px;
     border-color: #800000;
     border-style: solid;
@@ -53,6 +62,29 @@ span.row{
     color: white;
 }
 
+
+#updateAccount {
+    display: block;
+    margin: auto;
+    background: blue;
+    color: white;
+    margin-bottom: 50px;
+}
+
+
+#deleteSubscription {
+    /* display: block;
+    margin: auto;
+    background: darkred;
+    color: white; */
+    font-size: 1.5rem;
+}
+
+svg{
+    padding-top: 8px;
+}
+
+
 #notifications {
     display: block;
     margin: auto;
@@ -63,4 +95,26 @@ span.row{
     position: relative;
     cursor: pointer;
     font-size: 20px;
-  }
+}
+
+#subscriptionPage .container{
+    max-width: 95vw;
+}
+
+.subscription{
+    border: 5px;
+    border-color: #800000;
+    border-style: solid;
+    padding: 10px 5px;
+    text-align: center;
+    margin: 20px 0px;
+}
+
+#subscriptionPage .bmd-form-group{
+    padding-top:0;
+    height: 41px;
+    margin-top: 50px;
+    margin-bottom: 50px;
+    overflow: auto;
+    width: 20vw;
+}
