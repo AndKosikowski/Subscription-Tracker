@@ -41,6 +41,7 @@ body {
     white-space: nowrap;
     overflow: hidden;
     width: 20vw;
+    display: inline;
     text-align: center;
 }
 
@@ -159,4 +160,12 @@ svg{
     margin-bottom: 50px;
     overflow: auto;
     width: 20vw;
+}
+
+#subscriptionPage .col .form-group{
+    padding-top:0;
+    height: 41px;
+    margin: 50px 10px;
+    width: 20vw;
+    justify-content: flex-start;
 }

@@ -108,9 +108,9 @@ rhit.SubscriptionsManager = class {
 	}
 
 	add(name,cost,date,interval) {
-
-	let d = date.split("/");
-	let f = new Date(d[2], d[0] - 1, d[1]);
+		//https://stackoverflow.com/questions/40404663/convert-mm-dd-yyyy-to-date-in-javascript
+		let d = date.split("/");
+		let f = new Date(d[2], d[0] - 1, d[1]);
 
 
 		this._ref.doc(this._docID).collection(rhit.FB_COLLECTION_SUBSCRIPTIONS).add({
@@ -147,9 +147,21 @@ rhit.SubscriptionsManager = class {
 		this._unsubscribe();
 	}
 
-	update(id, quote, movie) {}
+	update(sub){
+		//https://stackoverflow.com/questions/40404663/convert-mm-dd-yyyy-to-date-in-javascript
+		let d = sub.date.split("/");
+		let f = new Date(d[2], d[0] - 1, d[1]);
 
-	delete(id) {}
+		this._ref.doc(this._docID).collection(rhit.FB_COLLECTION_SUBSCRIPTIONS).doc(sub.id).update({
+			[rhit.FB_KEY_COST]: sub.cost,
+			[rhit.FB_KEY_NAME]: sub.name,
+			[rhit.FB_KEY_RENEWAL_DATE]: f,
+			[rhit.FB_KEY_INTERVAL]: sub.interval,
+			[rhit.FB_KEY_LAST_TOUCHED]: firebase.firestore.Timestamp.now(),
+		})
+	}
+
+	delete(sub) {}
 
 	get length() {
 		return this._documentSnapshots.length;
@@ -192,7 +204,7 @@ rhit.SubscriptionPageController = class {
 		let date = sub.date.toDate();
 		//https://stackoverflow.com/questions/11591854/format-date-to-mm-dd-yyyy-in-javascript
 		let dateFormatted = ((date.getMonth() > 8) ? (date.getMonth() + 1) : ('0' + (date.getMonth() + 1))) + '/' + ((date.getDate() > 9) ? date.getDate() : ('0' + date.getDate())) + '/' + date.getFullYear();
-		return htmlToElement(`<span class="row flex-nowrap subscription">
+		return htmlToElement(`<span class="row flex-nowrap subscription" data-doc-id="${sub.id}>
 		<div class="col">
 		  <img class="logo" src="logos/netflix.jpg" alt="${sub.name} Logo">
 		</div>
@@ -212,6 +224,45 @@ rhit.SubscriptionPageController = class {
 	  </span>`);
 	}
 
+	_createEditCard(sub){
+		return htmlToElement(`<span class="row align-items-start flex-nowrap subscription" data-doc-id="${sub.id}>
+		<div class="col"> <img class="logo" src="logos/netflix.jpg" alt="${sub.name} Logo"> </div>
+		<div class="col">
+		  <div class="form-group">
+			<label for="subName" class="bmd-label-floating"></label>
+			<input type="subName" class="form-control" id="subName" value="${sub.name}">
+		  </div>
+		  <div class="form-group">
+			<label for="cost" class="bmd-label-floating"></label>
+			<input type="cost" class="form-control" id="cost" value="${sub.cost}">
+		  </div>
+		</div>
+		<div class="col">
+		  <div class="form-group">
+			<label for="renewDate" class="bmd-label-floating"></label>
+			<input type="date" class="form-control" id="renewDate" value="${sub.date.toDate()}">
+		  </div>
+		</div>
+		<div class="col">
+		  <div class="form-group">
+			<select type="name" class="form-control" id="interval" value="${sub.interval}">
+			  <option value="monthly">Monthly</option>
+			  <option value="yearly">Yearly</option>
+			</select>
+		  </div>
+		  <br>
+		  <i class="bi bi-trash"></i>
+		  <button type="button" class="btn btn-outline-danger" id="deleteSubscription"class="btn" data-toggle="modal" data-target="#exampleModal">
+			<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+			  <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"></path>
+			  <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"></path>
+			</svg>
+		  </button>
+		</div>
+	  </span>`);
+
+	}
+
 	updateView(){
 		const newList = htmlToElement('<div id="subscriptionListContainer"></div>')
 
@@ -219,16 +270,15 @@ rhit.SubscriptionPageController = class {
 			const sub = rhit.fbSubscriptionsManager.getSubscriptionAtIndex(i);
 			const newCard = this._createCard(sub);
 			newCard.onclick = (event) => {
-				// window.location.href = `/moviequote.html?id=${mq.id}`
+				const newEditCard = this._createEditCard(sub);
+				newList.appendChild(newEditCard);
 			}
 			newList.appendChild(newCard);
 		}
 
-
 		const oldList = document.querySelector("#subscriptionListContainer");
-		oldList.removeAttribute("id");
-		oldList.hidden = true;
-		oldList.parentElement.appendChild(newList);
+		oldList.parentElement.insertBefore(newList,oldList)
+		oldList.remove();
 	}
 }
 
