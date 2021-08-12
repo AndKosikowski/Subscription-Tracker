@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "firebase-admin": "^9.11.0",
     "fullcalendar": "^5.9.0"
   },
   "devDependencies": {},

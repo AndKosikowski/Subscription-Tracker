@@ -20,7 +20,6 @@ rhit.fbAccountManager = null;
 rhit.fbSubscriptionsManager = null;
 rhit.calendarManager = null;
 
-
 //Stolen from stackoverflow
 function htmlToElement(html) {
 	var template = document.createElement('template');
@@ -44,16 +43,15 @@ rhit.AccountManager = class{
 		this._uid = uid;
 		console.log("uid: ", uid);
 		this._documentSnapshot = {};
-		this._docID = null;
 		this._unsubscribe = null;
-		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_USERS);
+		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_USERS).doc(this._uid);
 	}
 
 	beginListening(changeListener) {
-		let query = this._ref.where("Rosefire", "==", this._uid);
-		this._unsubscribe = query.onSnapshot((querySnapshot) => {
-			this._documentSnapshot = querySnapshot.docs[0];
-			this._docID = this._documentSnapshot.id;
+
+		this._unsubscribe = this._ref.onSnapshot((snapshot) => {
+			this._documentSnapshot = snapshot.doc;
+			console.log("snapshot: ", snapshot);
 			changeListener();
 		});
 	}
@@ -63,10 +61,7 @@ rhit.AccountManager = class{
 	}
 
 	updateAccount(name,email,phone,remindPhone,remindEmail){
-		console.log(this._ref.doc(this._docID).id);
-		console.log(this._ref.doc(this._docID));
-
-		this._ref.doc(this._docID).update({
+		this._ref.doc(this._uid).update({
 			[rhit.FB_KEY_NAME]: name,
 			[rhit.FB_KEY_EMAIL]: email,
 			[rhit.FB_KEY_PHONE]: phone,
@@ -338,6 +333,7 @@ rhit.FbAuthManager = class {
 		}
 		console.log("Rosefire success!", rfUser);
 
+
 		firebase.auth().signInWithCustomToken(rfUser.token).catch((rror) => {
 			const errorCode = error.code;
 			const errorMessage = error.message;
@@ -346,7 +342,7 @@ rhit.FbAuthManager = class {
 			} else{
 				console.error("custom auth error", errorCode, errorMessage);
 			}
-		});
+		})
   		});	
 	}
 
@@ -416,6 +412,37 @@ rhit.CalendarCreator = class {
 }
 
 rhit.initializePage = function(){
+	console.log(rhit.fbAuthManager.uid);
+	let ref = firebase.firestore().collection(rhit.FB_COLLECTION_USERS).doc(rhit.fbAuthManager.uid);
+
+	ref.get()
+  	.then((docSnapshot) => {
+    	if (docSnapshot.exists) {
+      		ref.onSnapshot((doc) => {
+      		});
+    	} else {
+     		ref.set({
+				[rhit.FB_KEY_NAME]: rhit.fbAuthManager.uid,
+				[rhit.FB_KEY_EMAIL]: null,
+				[rhit.FB_KEY_PHONE]: null,
+				[rhit.FB_KEY_REMIND_EMAIL]: false,
+				[rhit.FB_KEY_REMIND_TEXT]: false,
+				[rhit.FB_KEY_LAST_TOUCHED]: firebase.firestore.Timestamp.now()
+	 		 }) // create the document
+   		}
+	});
+	// 	console.log("hi")
+	// firebase.firestore().collection(rhit.FB_COLLECTION_USERS).doc(rhit.fbAuthManager.uid).set({
+	// 	[rhit.FB_KEY_NAME]: rhit.fbAuthManager.uid,
+	// 	[rhit.FB_KEY_EMAIL]: null,
+	// // 	[rhit.FB_KEY_PHONE]: null,
+	// // 	[rhit.FB_KEY_REMIND_EMAIL]: false,
+	// // 	[rhit.FB_KEY_REMIND_TEXT]: false,
+	// // 	[rhit.FB_KEY_LAST_TOUCHED]: firebase.firestore.Timestamp.now()
+	// });
+	
+
+
 	if (document.querySelector("#mainPage")) {
 		new rhit.MainPageController();
 	}
