@@ -17,8 +17,17 @@ rhit.FB_KEY_REMIND_EMAIL = "RemindEmail";
 rhit.FB_KEY_REMIND_TEXT = "RemindText";
 rhit.fbAuthManager = null;
 rhit.fbAccountManager = null;
+rhit.fbSubscriptionsManager = null;
 rhit.calendarManager = null;
 
+
+//Stolen from stackoverflow
+function htmlToElement(html) {
+	var template = document.createElement('template');
+	html = html.trim();
+	template.innerHTML = html;
+	return template.content.firstChild;
+}
 
 rhit.Subscription = class{
 	constructor(id,name,cost,interval,date){
@@ -92,18 +101,23 @@ rhit.AccountManager = class{
 rhit.SubscriptionsManager = class {
 	constructor(uid) {
 		this._uid = uid;
-		console.log("Created Subscriptions Manager");
+		this._docID = null;
 		this._documentSnapshots = [];
-		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_SUBSCRIPTIONTRACKER);
+		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_USERS);
 		this._unsubscribe = null;
 	}
 
-	add(name,cost,interval,date) {
-		this._ref.add({
+	add(name,cost,date,interval) {
+
+	let d = date.split("/");
+	let f = new Date(d[2], d[0] - 1, d[1]);
+
+
+		this._ref.doc(this._docID).collection(rhit.FB_COLLECTION_SUBSCRIPTIONS).add({
 			[rhit.FB_KEY_NAME]: name,
 			[rhit.FB_KEY_COST]: cost,
 			[rhit.FB_KEY_INTERVAL]: interval,
-			[rhit.FB_KEY_RENEWAL_DATE]: date,
+			[rhit.FB_KEY_RENEWAL_DATE]: firebase.firestore.Timestamp.fromDate(f),
 			[rhit.FB_KEY_LAST_TOUCHED]: firebase.firestore.Timestamp.now()
 		})
 		.then(function (docRef) {
@@ -115,16 +129,18 @@ rhit.SubscriptionsManager = class {
 	}
 
 	beginListening(changeListener) {
-
-		let query = this._ref.orderBy(rhit.FB_KEY_LAST_TOUCHED, "desc");
-
-		this._unsubscribe = query.onSnapshot((querySnapshot) => {
-			console.log("Subscription Update:");
-
-			this._documentSnapshots = querySnapshot.docs;
-
-			changeListener();
+		let query2 = null;
+		let query = this._ref.where("Rosefire","==", rhit.fbAuthManager.uid).get()
+		.then((results) => {
+			this._docID = results.docs[0].id;
+		}).then(() =>{
+			query2 = this._ref.doc(this._docID).collection(rhit.FB_COLLECTION_SUBSCRIPTIONS);
+			this._unsubscribe = query2.onSnapshot((querySnapshot) => {
+				this._documentSnapshots = querySnapshot.docs;
+				changeListener();
+			})
 		});
+
 	}
 
 	stopListening() {
@@ -138,12 +154,15 @@ rhit.SubscriptionsManager = class {
 	get length() {
 		return this._documentSnapshots.length;
 	}
-	getMovieQuoteAtIndex(index) {
+
+	getSubscriptionAtIndex(index) {
 		const docSnapshot = this._documentSnapshots[index];
-		const mq = new rhit.MovieQuote(docSnapshot.id,
-			docSnapshot.get(rhit.FB_KEY_QUOTE),
-			docSnapshot.get(rhit.FB_KEY_MOVIE));
-		return mq;
+		const sub = new rhit.Subscription(docSnapshot.id,
+			docSnapshot.get(rhit.FB_KEY_NAME),
+			docSnapshot.get(rhit.FB_KEY_COST),
+			docSnapshot.get(rhit.FB_KEY_INTERVAL),
+			docSnapshot.get(rhit.FB_KEY_RENEWAL_DATE));
+		return sub;
 	}
 }
 
@@ -158,7 +177,58 @@ rhit.MainPageController = class {
 
 rhit.SubscriptionPageController = class {
 	constructor() {
+		document.querySelector("#submitAddSubscription").onclick = (event) => {
+			const name = document.querySelector("#inputName").value;
+			const cost = document.querySelector("#inputCost").value;
+			const date = document.querySelector("#inputDate").value;
+			const interval = document.querySelector("#inputInterval").value;
+			rhit.fbSubscriptionsManager.add(name,cost,date,interval);
+		}
 
+		rhit.fbSubscriptionsManager.beginListening(this.updateView.bind(this));
+	}
+
+	_createCard(sub){
+		let date = sub.date.toDate();
+		//https://stackoverflow.com/questions/11591854/format-date-to-mm-dd-yyyy-in-javascript
+		let dateFormatted = ((date.getMonth() > 8) ? (date.getMonth() + 1) : ('0' + (date.getMonth() + 1))) + '/' + ((date.getDate() > 9) ? date.getDate() : ('0' + date.getDate())) + '/' + date.getFullYear();
+		return htmlToElement(`<span class="row flex-nowrap subscription">
+		<div class="col">
+		  <img class="logo" src="logos/netflix.jpg" alt="${sub.name} Logo">
+		</div>
+		<div class="col">
+		  <h3>${sub.name}</h3>
+		  <div>${sub.cost}</div>
+		</div>
+		<div class="col">
+		  <h3>Renews:</h3>
+
+		  <div>${dateFormatted}</div>
+		</div>
+		<div class="col">
+		  <h3>Interval:</h3>
+		  <div>${sub.interval}</div>
+		</div>
+	  </span>`);
+	}
+
+	updateView(){
+		const newList = htmlToElement('<div id="subscriptionListContainer"></div>')
+
+		for (let i = 0; i < rhit.fbSubscriptionsManager.length; i++) {
+			const sub = rhit.fbSubscriptionsManager.getSubscriptionAtIndex(i);
+			const newCard = this._createCard(sub);
+			newCard.onclick = (event) => {
+				// window.location.href = `/moviequote.html?id=${mq.id}`
+			}
+			newList.appendChild(newCard);
+		}
+
+
+		const oldList = document.querySelector("#subscriptionListContainer");
+		oldList.removeAttribute("id");
+		oldList.hidden = true;
+		oldList.parentElement.appendChild(newList);
 	}
 }
 
@@ -300,6 +370,7 @@ rhit.initializePage = function(){
 		new rhit.MainPageController();
 	}
 	if (document.querySelector("#subscriptionPage")) {
+		rhit.fbSubscriptionsManager = new rhit.SubscriptionsManager(rhit.fbAuthManager.uid);
 		new rhit.SubscriptionPageController();
 	}
 	if (document.querySelector("#accountPage")) {

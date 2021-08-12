@@ -18,7 +18,8 @@
   </nav>
   <div id="subscriptionPage" class="container page-container">
     
-    <span class="row flex-nowrap subscription"> <!--Span maybe used for subscription boxes?-->
+    <div id="subscriptionListContainer">
+    <span class="row flex-nowrap subscription">
       <div class="col">
         <img class="logo" src="logos/netflix.jpg" alt="Netflix Logo">
       </div>
@@ -35,7 +36,7 @@
         <div>Monthly</div>
       </div>
     </span>
-<!-- Edit subcription below
+
     <span class="row flex-nowrap subscription">
       <div class="col">
         <img class="logo" src="logos/netflix.jpg" alt="Netflix Logo">
@@ -72,7 +73,7 @@
           </svg>
         </button>
       </div>
-    </span> -->
+    </span>
 
     <span class="row flex-nowrap subscription"> <!--Span maybe used for subscription boxes?-->
       <div class="col">
@@ -91,6 +92,48 @@
         <div>Monthly</div>
       </div>
     </span>
+  </div>
+
+  <button type="button" id="fab" class="btn btn-primary bmd-btn-fab" data-toggle="modal" data-target="#addSubscriptionDialogue">
+    <i class="material-icons">add</i>
+  </button>
+
+<!-- Add Modal -->
+  <div class="modal fade" id="addSubscriptionDialogue" tabindex="-1" role="dialog" aira-labelledby="Add subscription">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Subscription</h5>
+        </div>
+        <div class="modal-body">
+          
+            <div class="form-group bmd-form-group">
+              <label for="inputName" class="bmd-label-floating">Name</label>
+              <input type="text" class="form-control" id="inputName">
+            </div>
+            <div class="form-group bmd-form-group">
+              <label for="inputCost" class="bmd-label-floating">Cost</label>
+              <input type="text" class="form-control" id="inputCost">
+              <span class="bmd-help">What movie is this quote from?</span>
+            </div>
+            <div class="form-group bmd-form-group">
+              <label for="inputDate" class="bmd-label-floating">Next Renewal Date</label>
+              <input type="text" class="form-control" id="inputDate">
+            </div>
+            <div class="form-group bmd-form-group">
+              <select type="name" class="form-control" id="inputInterval">
+                <option value="Monthly">Monthly</option>
+                <option value="Yearly">Yearly</option>
+              </select>
+            </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">CANCEL</button>
+          <button id="submitAddSubscription" type="button" data-dismiss="modal" class="btn btn-primary">CREATE</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Modal -->
   <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
