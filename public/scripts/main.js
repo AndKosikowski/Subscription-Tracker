@@ -20,6 +20,7 @@ rhit.fbAccountManager = null;
 rhit.fbSubscriptionsManager = null;
 rhit.calendarManager = null;
 
+
 //Stolen from stackoverflow
 function htmlToElement(html) {
 	var template = document.createElement('template');
@@ -41,14 +42,18 @@ rhit.Subscription = class{
 rhit.AccountManager = class{
 	constructor(uid){
 		this._uid = uid;
+		console.log("uid: ", uid);
 		this._documentSnapshot = {};
+		this._docID = null;
 		this._unsubscribe = null;
-		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_USERS).doc(this._uid);
+		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_USERS);
 	}
 
 	beginListening(changeListener) {
-		this._unsubscribe = this._ref.onSnapshot((doc) => {
-			this._documentSnapshot = doc;
+		let query = this._ref.where("Rosefire", "==", this._uid);
+		this._unsubscribe = query.onSnapshot((querySnapshot) => {
+			this._documentSnapshot = querySnapshot.docs[0];
+			this._docID = this._documentSnapshot.id;
 			changeListener();
 		});
 	}
@@ -57,8 +62,11 @@ rhit.AccountManager = class{
 		this._unsubscribe();
 	}
 
-	updateAccount(name, email, phone, remindPhone, remindEmail){
-		this._ref.update({
+	updateAccount(name,email,phone,remindPhone,remindEmail){
+		console.log(this._ref.doc(this._docID).id);
+		console.log(this._ref.doc(this._docID));
+
+		this._ref.doc(this._docID).update({
 			[rhit.FB_KEY_NAME]: name,
 			[rhit.FB_KEY_EMAIL]: email,
 			[rhit.FB_KEY_PHONE]: phone,
@@ -66,10 +74,6 @@ rhit.AccountManager = class{
 			[rhit.FB_KEY_REMIND_TEXT]: remindPhone,
 			[rhit.FB_KEY_LAST_TOUCHED]: firebase.firestore.Timestamp.now(),
 		})
-	}
-
-	deleteAccount(){
-
 	}
 
 	get name(){
@@ -97,8 +101,9 @@ rhit.AccountManager = class{
 rhit.SubscriptionsManager = class {
 	constructor(uid) {
 		this._uid = uid;
+		this._docID = null;
 		this._documentSnapshots = [];
-		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_USERS).doc(this._uid).collection(rhit.FB_COLLECTION_SUBSCRIPTIONS);
+		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_USERS);
 		this._unsubscribe = null;
 	}
 
@@ -108,7 +113,7 @@ rhit.SubscriptionsManager = class {
 		let f = new Date(d[2], d[0] - 1, d[1]);
 
 
-		this._ref.add({
+		this._ref.doc(this._docID).collection(rhit.FB_COLLECTION_SUBSCRIPTIONS).add({
 			[rhit.FB_KEY_NAME]: name,
 			[rhit.FB_KEY_COST]: cost,
 			[rhit.FB_KEY_INTERVAL]: interval,
@@ -124,10 +129,18 @@ rhit.SubscriptionsManager = class {
 	}
 
 	beginListening(changeListener) {
-		this._unsubscribe = this._ref.onSnapshot((querySnapshot) => {
-			this._documentSnapshots = querySnapshot.docs;
-			changeListener();
-		})
+		let query2 = null;
+		let query = this._ref.where("Rosefire","==", rhit.fbAuthManager.uid).get()
+		.then((results) => {
+			this._docID = results.docs[0].id;
+		}).then(() =>{
+			query2 = this._ref.doc(this._docID).collection(rhit.FB_COLLECTION_SUBSCRIPTIONS);
+			this._unsubscribe = query2.onSnapshot((querySnapshot) => {
+				this._documentSnapshots = querySnapshot.docs;
+				changeListener();
+			})
+		});
+
 	}
 
 	stopListening() {
@@ -139,7 +152,7 @@ rhit.SubscriptionsManager = class {
 		let d = sub.date.split("/");
 		let f = new Date(d[2], d[0] - 1, d[1]);
 
-		this._ref.doc(sub.id).update({
+		this._ref.doc(this._docID).collection(rhit.FB_COLLECTION_SUBSCRIPTIONS).doc(sub.id).update({
 			[rhit.FB_KEY_COST]: sub.cost,
 			[rhit.FB_KEY_NAME]: sub.name,
 			[rhit.FB_KEY_RENEWAL_DATE]: f,
@@ -325,7 +338,7 @@ rhit.FbAuthManager = class {
 		}
 		console.log("Rosefire success!", rfUser);
 
-		firebase.auth().signInWithCustomToken(rfUser.token).catch((error) => {
+		firebase.auth().signInWithCustomToken(rfUser.token).catch((rror) => {
 			const errorCode = error.code;
 			const errorMessage = error.message;
 			if (errorCode === 'auth/invalid-custom-token') {
@@ -333,7 +346,7 @@ rhit.FbAuthManager = class {
 			} else{
 				console.error("custom auth error", errorCode, errorMessage);
 			}
-		})
+		});
   		});	
 	}
 
@@ -403,37 +416,6 @@ rhit.CalendarCreator = class {
 }
 
 rhit.initializePage = function(){
-	console.log(rhit.fbAuthManager.uid);
-	let ref = firebase.firestore().collection(rhit.FB_COLLECTION_USERS).doc(rhit.fbAuthManager.uid);
-
-	ref.get()
-  	.then((docSnapshot) => {
-    	if (docSnapshot.exists) {
-      		ref.onSnapshot((doc) => {
-      		});
-    	} else {
-     		ref.set({
-				[rhit.FB_KEY_NAME]: rhit.fbAuthManager.uid,
-				[rhit.FB_KEY_EMAIL]: null,
-				[rhit.FB_KEY_PHONE]: null,
-				[rhit.FB_KEY_REMIND_EMAIL]: false,
-				[rhit.FB_KEY_REMIND_TEXT]: false,
-				[rhit.FB_KEY_LAST_TOUCHED]: firebase.firestore.Timestamp.now()
-	 		 }) // create the document
-   		}
-	});
-	// 	console.log("hi")
-	// firebase.firestore().collection(rhit.FB_COLLECTION_USERS).doc(rhit.fbAuthManager.uid).set({
-	// 	[rhit.FB_KEY_NAME]: rhit.fbAuthManager.uid,
-	// 	[rhit.FB_KEY_EMAIL]: null,
-	// // 	[rhit.FB_KEY_PHONE]: null,
-	// // 	[rhit.FB_KEY_REMIND_EMAIL]: false,
-	// // 	[rhit.FB_KEY_REMIND_TEXT]: false,
-	// // 	[rhit.FB_KEY_LAST_TOUCHED]: firebase.firestore.Timestamp.now()
-	// });
-	
-
-
 	if (document.querySelector("#mainPage")) {
 		new rhit.MainPageController();
 	}
