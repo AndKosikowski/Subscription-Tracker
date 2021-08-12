@@ -41,17 +41,14 @@ rhit.Subscription = class{
 rhit.AccountManager = class{
 	constructor(uid){
 		this._uid = uid;
-		console.log("uid: ", uid);
 		this._documentSnapshot = {};
 		this._unsubscribe = null;
 		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_USERS).doc(this._uid);
 	}
 
 	beginListening(changeListener) {
-
-		this._unsubscribe = this._ref.onSnapshot((snapshot) => {
-			this._documentSnapshot = snapshot.doc;
-			console.log("snapshot: ", snapshot);
+		this._unsubscribe = this._ref.onSnapshot((doc) => {
+			this._documentSnapshot = doc;
 			changeListener();
 		});
 	}
@@ -60,8 +57,8 @@ rhit.AccountManager = class{
 		this._unsubscribe();
 	}
 
-	updateAccount(name,email,phone,remindPhone,remindEmail){
-		this._ref.doc(this._uid).update({
+	updateAccount(name, email, phone, remindPhone, remindEmail){
+		this._ref.update({
 			[rhit.FB_KEY_NAME]: name,
 			[rhit.FB_KEY_EMAIL]: email,
 			[rhit.FB_KEY_PHONE]: phone,
