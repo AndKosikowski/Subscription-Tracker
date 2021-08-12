@@ -333,8 +333,7 @@ rhit.FbAuthManager = class {
 		}
 		console.log("Rosefire success!", rfUser);
 
-
-		firebase.auth().signInWithCustomToken(rfUser.token).catch((rror) => {
+		firebase.auth().signInWithCustomToken(rfUser.token).catch((error) => {
 			const errorCode = error.code;
 			const errorMessage = error.message;
 			if (errorCode === 'auth/invalid-custom-token') {
