@@ -68,6 +68,10 @@ rhit.AccountManager = class{
 		})
 	}
 
+	deleteAccount(){
+
+	}
+
 	get name(){
 		return this._documentSnapshot.get(rhit.FB_KEY_NAME);
 	}
@@ -93,9 +97,8 @@ rhit.AccountManager = class{
 rhit.SubscriptionsManager = class {
 	constructor(uid) {
 		this._uid = uid;
-		this._docID = null;
 		this._documentSnapshots = [];
-		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_USERS);
+		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_USERS).doc(this._uid).collection(rhit.FB_COLLECTION_SUBSCRIPTIONS);
 		this._unsubscribe = null;
 	}
 
@@ -105,7 +108,7 @@ rhit.SubscriptionsManager = class {
 		let f = new Date(d[2], d[0] - 1, d[1]);
 
 
-		this._ref.doc(this._docID).collection(rhit.FB_COLLECTION_SUBSCRIPTIONS).add({
+		this._ref.add({
 			[rhit.FB_KEY_NAME]: name,
 			[rhit.FB_KEY_COST]: cost,
 			[rhit.FB_KEY_INTERVAL]: interval,
@@ -121,18 +124,10 @@ rhit.SubscriptionsManager = class {
 	}
 
 	beginListening(changeListener) {
-		let query2 = null;
-		let query = this._ref.where("Rosefire","==", rhit.fbAuthManager.uid).get()
-		.then((results) => {
-			this._docID = results.docs[0].id;
-		}).then(() =>{
-			query2 = this._ref.doc(this._docID).collection(rhit.FB_COLLECTION_SUBSCRIPTIONS);
-			this._unsubscribe = query2.onSnapshot((querySnapshot) => {
-				this._documentSnapshots = querySnapshot.docs;
-				changeListener();
-			})
-		});
-
+		this._unsubscribe = this._ref.onSnapshot((querySnapshot) => {
+			this._documentSnapshots = querySnapshot.docs;
+			changeListener();
+		})
 	}
 
 	stopListening() {
@@ -144,7 +139,7 @@ rhit.SubscriptionsManager = class {
 		let d = sub.date.split("/");
 		let f = new Date(d[2], d[0] - 1, d[1]);
 
-		this._ref.doc(this._docID).collection(rhit.FB_COLLECTION_SUBSCRIPTIONS).doc(sub.id).update({
+		this._ref.doc(sub.id).update({
 			[rhit.FB_KEY_COST]: sub.cost,
 			[rhit.FB_KEY_NAME]: sub.name,
 			[rhit.FB_KEY_RENEWAL_DATE]: f,
