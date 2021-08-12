@@ -4,13 +4,19 @@
 
 var rhit = rhit || {};
 
-rhit.FB_COLLECTION_SUBSCRIPTIONTRACKER = "Subscription-Tracker";
-rhit.FB_KEY_NAME = "Name"
-rhit.FB_KEY_COST = "Cost"
-rhit.FB_KEY_INTERVAL = "Interval"
-rhit.FB_KEY_RENEWAL_DATE = "Renewal"
-rhit.FB_KEY_LAST_TOUCHED = "LastTouched"
+rhit.FB_COLLECTION_USERS = "Users";
+rhit.FB_COLLECTION_SUBSCRIPTIONS = "Subscriptions";
+rhit.FB_KEY_NAME = "Name";
+rhit.FB_KEY_COST = "Cost";
+rhit.FB_KEY_INTERVAL = "Interval";
+rhit.FB_KEY_RENEWAL_DATE = "Renewal";
+rhit.FB_KEY_LAST_TOUCHED = "LastTouched";
+rhit.FB_KEY_EMAIL = "Email";
+rhit.FB_KEY_PHONE = "Phone";
+rhit.FB_KEY_REMIND_EMAIL = "RemindEmail";
+rhit.FB_KEY_REMIND_TEXT = "RemindText";
 rhit.fbAuthManager = null;
+rhit.fbAccountManager = null;
 rhit.calendarManager = null;
 
 
@@ -23,6 +29,65 @@ rhit.Subscription = class{
 		this.date = date;
 	}
 }
+
+rhit.AccountManager = class{
+	constructor(uid){
+		this._uid = uid;
+		console.log("uid: ", uid);
+		this._documentSnapshot = {};
+		this._docID = null;
+		this._unsubscribe = null;
+		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_USERS);
+	}
+
+	beginListening(changeListener) {
+		let query = this._ref.where("Rosefire", "==", this._uid);
+		this._unsubscribe = query.onSnapshot((querySnapshot) => {
+			this._documentSnapshot = querySnapshot.docs[0];
+			this._docID = this._documentSnapshot.id;
+			changeListener();
+		});
+	}
+
+	stopListening() {
+		this._unsubscribe();
+	}
+
+	updateAccount(name,email,phone,remindPhone,remindEmail){
+		console.log(this._ref.doc(this._docID).id);
+		console.log(this._ref.doc(this._docID));
+
+		this._ref.doc(this._docID).update({
+			[rhit.FB_KEY_NAME]: name,
+			[rhit.FB_KEY_EMAIL]: email,
+			[rhit.FB_KEY_PHONE]: phone,
+			[rhit.FB_KEY_REMIND_EMAIL]: remindEmail,
+			[rhit.FB_KEY_REMIND_TEXT]: remindPhone,
+			[rhit.FB_KEY_LAST_TOUCHED]: firebase.firestore.Timestamp.now(),
+		})
+	}
+
+	get name(){
+		return this._documentSnapshot.get(rhit.FB_KEY_NAME);
+	}
+
+	get email(){
+		return this._documentSnapshot.get(rhit.FB_KEY_EMAIL);
+	}
+
+	get phone(){
+		return this._documentSnapshot.get(rhit.FB_KEY_PHONE);
+	}
+
+	get remindText(){
+		return this._documentSnapshot.get(rhit.FB_KEY_REMIND_TEXT);
+	}
+
+	get remindEmail(){
+		return this._documentSnapshot.get(rhit.FB_KEY_REMIND_EMAIL);
+	}
+
+};
 
 rhit.SubscriptionsManager = class {
 	constructor(uid) {
@@ -99,7 +164,35 @@ rhit.SubscriptionPageController = class {
 
 rhit.AccountPageController = class {
 	constructor() {
+		document.querySelector("#updateAccount").onclick = (event) => {
+			rhit.fbAccountManager.updateAccount(document.querySelector("#accountName").value,
+				document.querySelector("#accountEmail").value,
+				document.querySelector("#accountPhone").value,
+				document.querySelector("#accountReminderPhone").checked,
+				document.querySelector("#accountReminderEmail").checked
+			);
+		};
+		document.querySelector("#signOut").onclick = (event) => {
+			rhit.fbAuthManager.signOut();
+		}
+		rhit.fbAccountManager.beginListening(this.updateView.bind(this));
+	}
 
+	updateView(){
+		if(rhit.fbAccountManager.name){
+			document.querySelector("#accountName").value = rhit.fbAccountManager.name;
+			document.querySelector("#accountName").parentElement.classList.add("is-filled");
+		}
+		if(rhit.fbAccountManager.email){
+			document.querySelector("#accountEmail").value = rhit.fbAccountManager.email;
+			document.querySelector("#accountEmail").parentElement.classList.add("is-filled");
+		}
+		if(rhit.fbAccountManager.phone){
+			document.querySelector("#accountPhone").value = rhit.fbAccountManager.phone;
+			document.querySelector("#accountPhone").parentElement.classList.add("is-filled");
+		}
+		document.querySelector("#accountReminderEmail").checked = rhit.fbAccountManager.remindEmail;
+		document.querySelector("#accountReminderPhone").checked = rhit.fbAccountManager.remindText;
 	}
 }
 
@@ -162,11 +255,11 @@ rhit.LoginPageController = class {
 rhit.checkForRedirects = function() {
 
 	if (document.querySelector("#loginPage") && rhit.fbAuthManager.isSignedIn) {
-		window.location.href = "main.html"
+		window.location.href = "/main.html"
 	}
 
 	if (!document.querySelector("#loginPage") && !rhit.fbAuthManager.isSignedIn) {
-		window.location.href = "index.html"
+		window.location.href = "/index.html"
 	}
 };
 // https://fullcalendar.io/docs
@@ -210,6 +303,7 @@ rhit.initializePage = function(){
 		new rhit.SubscriptionPageController();
 	}
 	if (document.querySelector("#accountPage")) {
+		rhit.fbAccountManager = new rhit.AccountManager(rhit.fbAuthManager.uid);
 		new rhit.AccountPageController();
 	}
 	if (document.querySelector("#loginPage")){
@@ -223,13 +317,14 @@ rhit.initializePage = function(){
 			console.log(event.target.innerHTML);
 		});
 	}
+
 }
 
 rhit.main = function () {
 	rhit.fbAuthManager = new rhit.FbAuthManager();
 	rhit.fbAuthManager.beginListening(() => {
 		console.log("auth change callback fired");
-		console.log("isSignedIn = ",rhit.fbAuthManager.isSignedIn);
+		console.log("isSignedIn = ", rhit.fbAuthManager.isSignedIn);
 		rhit.checkForRedirects();
 		rhit.initializePage();
 	});

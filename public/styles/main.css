@@ -97,6 +97,14 @@ body {
     font-size: 1.5rem;
 }
 
+#signOut{
+    display: block;
+    margin: auto;
+    background: purple;
+    color: white;
+    margin-bottom: 50px;
+}
+
 svg{
     padding-top: 8px;
 }
@@ -129,8 +137,6 @@ svg{
     text-align: center;
     margin: 20px 0px;
 }
-
-
 
 #subscriptionPage .bmd-form-group{
     padding-top:0;
