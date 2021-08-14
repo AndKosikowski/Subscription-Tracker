@@ -167,5 +167,9 @@ svg{
     height: 41px;
     margin: 50px 10px;
     width: 20vw;
-    justify-content: flex-start;
+
+}
+
+#subscriptionPage .col .form-control{
+    text-align: center;
 }

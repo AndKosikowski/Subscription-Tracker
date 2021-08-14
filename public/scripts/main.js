@@ -181,7 +181,6 @@ rhit.SubscriptionPageController = class {
 			const interval = document.querySelector("#inputInterval").value;
 			rhit.fbSubscriptionsManager.add(name,cost,date,interval);
 		}
-
 		rhit.fbSubscriptionsManager.beginListening(this.updateView.bind(this));
 	}
 
@@ -249,14 +248,24 @@ rhit.SubscriptionPageController = class {
 	}
 
 	updateView(){
-		const newList = htmlToElement('<div id="subscriptionListContainer"></div>')
+		const newList = htmlToElement('<div id="subscriptionListContainer"></div>');
 
 		for (let i = 0; i < rhit.fbSubscriptionsManager.length; i++) {
 			const sub = rhit.fbSubscriptionsManager.getSubscriptionAtIndex(i);
 			const newCard = this._createCard(sub);
+			newCard.classList.add("inCardMode");
 			newCard.onclick = (event) => {
+				if(!!document.querySelector(".inEditMode")){
+					document.querySelector(".inEditMode").remove();
+					let hiddenEls = document.getElementsByClassName("inCardMode");
+					for (let j = 0; j < hiddenEls.length; j++){
+						hiddenEls[j].hidden = false;
+					}
+				}
 				const newEditCard = this._createEditCard(sub);
-				newList.appendChild(newEditCard);
+				newEditCard.classList.add("inEditMode");
+				newList.insertBefore(newEditCard, newCard);
+				newCard.hidden = true;
 			}
 			newList.appendChild(newCard);
 		}
@@ -264,6 +273,7 @@ rhit.SubscriptionPageController = class {
 		const oldList = document.querySelector("#subscriptionListContainer");
 		oldList.parentElement.insertBefore(newList,oldList)
 		oldList.remove();
+
 	}
 }
 
