@@ -89,6 +89,15 @@ body {
     margin-bottom: 50px;
 }
 
+#updateSubscription {
+    display: block;
+    margin: auto;
+    background: blue;
+    color: white;
+    position: relative;
+    top: 40px;
+}
+
 
 #deleteSubscription {
     /* display: block;
@@ -172,4 +181,15 @@ svg{
 
 #subscriptionPage .col .form-control{
     text-align: center;
+    position: relative;
+    bottom: 30px;
+}
+
+.top-row {
+    position: relative;
+    bottom: 30px;
+}
+
+.date-shift{
+    left: 70px;
 }
