@@ -19,6 +19,7 @@ rhit.fbAuthManager = null;
 rhit.fbAccountManager = null;
 rhit.fbSubscriptionsManager = null;
 rhit.calendarManager = null;
+rhit.fbMainPageSubscriptionsManager = null;
 
 
 //Stolen from stackoverflow
@@ -29,6 +30,30 @@ function htmlToElement(html) {
 	return template.content.firstChild;
 }
 
+function _createCard(sub){
+	let date = sub.date.toDate();
+	//https://stackoverflow.com/questions/11591854/format-date-to-mm-dd-yyyy-in-javascript
+	let dateFormatted = ((date.getMonth() > 8) ? (date.getMonth() + 1) : ('0' + (date.getMonth() + 1))) + '/' + ((date.getDate() > 9) ? date.getDate() : ('0' + date.getDate())) + '/' + date.getFullYear();
+	return htmlToElement(`<span class="row flex-nowrap subscription" data-doc-id="${sub.id}>
+	<div class="col">
+	  <img class="logo" src="logos/netflix.jpg" alt="${sub.name} Logo">
+	</div>
+	<div class="col">
+	  <h3>${sub.name}</h3>
+	  <div>${sub.cost}</div>
+	</div>
+	<div class="col">
+	  <h3>Renews:</h3>
+
+	  <div>${dateFormatted}</div>
+	</div>
+	<div class="col">
+	  <h3>Interval:</h3>
+	  <div>${sub.interval}</div>
+	</div>
+  </span>`);
+}
+
 rhit.Subscription = class{
 	constructor(id,name,cost,interval,date){
 		this.id = id;
@@ -37,6 +62,41 @@ rhit.Subscription = class{
 		this.interval = interval;
 		this.date = date;
 	}
+}
+
+rhit.MainPageSubscriptions = class{
+	constructor(uid) {
+		this._uid = uid;
+		this._documentSnapshots = [];
+		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_USERS).doc(this._uid).collection(rhit.FB_COLLECTION_SUBSCRIPTIONS);
+		this._unsubscribe = null;
+	}
+
+	beginListening(changeListener) {
+		this._unsubscribe = this._ref.onSnapshot((querySnapshot) => {
+			this._documentSnapshots = querySnapshot.docs;
+			changeListener();
+		});
+	}
+
+	stopListening() {
+		this._unsubscribe();
+	}
+
+	get length() {
+		return this._documentSnapshots.length;
+	}
+
+	getSubscriptionAtIndex(index) {
+		const docSnapshot = this._documentSnapshots[index];
+		const sub = new rhit.Subscription(docSnapshot.id,
+			docSnapshot.get(rhit.FB_KEY_NAME),
+			docSnapshot.get(rhit.FB_KEY_COST),
+			docSnapshot.get(rhit.FB_KEY_INTERVAL),
+			docSnapshot.get(rhit.FB_KEY_RENEWAL_DATE));
+		return sub;
+	}
+
 }
 
 rhit.AccountManager = class{
@@ -162,7 +222,23 @@ rhit.SubscriptionsManager = class {
 rhit.MainPageController = class {
 	constructor() {
 		rhit.calendarManager = new rhit.CalendarCreator();
-		console.log("calendar?");
+		rhit.fbMainPageSubscriptionsManager.beginListening(this.updateView.bind(this));
+	}
+	
+	updateView(){
+		const newList = htmlToElement('<div id="subscriptionListContainer"></div>');
+
+		for (let i = 0; i < rhit.fbMainPageSubscriptionsManager.length; i++) {
+			const sub = rhit.fbMainPageSubscriptionsManager.getSubscriptionAtIndex(i);
+			const newCard = _createCard(sub);
+			rhit.calendarManager.addEvent(sub.name,sub.date);
+			newList.appendChild(newCard);
+		}
+
+		const oldList = document.querySelector("#subscriptionListContainer");
+		oldList.parentElement.insertBefore(newList,oldList)
+		oldList.remove();
+
 	}
 
 }
@@ -179,29 +255,6 @@ rhit.SubscriptionPageController = class {
 		rhit.fbSubscriptionsManager.beginListening(this.updateView.bind(this));
 	}
 
-	_createCard(sub){
-		let date = sub.date.toDate();
-		//https://stackoverflow.com/questions/11591854/format-date-to-mm-dd-yyyy-in-javascript
-		let dateFormatted = ((date.getMonth() > 8) ? (date.getMonth() + 1) : ('0' + (date.getMonth() + 1))) + '/' + ((date.getDate() > 9) ? date.getDate() : ('0' + date.getDate())) + '/' + date.getFullYear();
-		return htmlToElement(`<span class="row flex-nowrap subscription" data-doc-id="${sub.id}>
-		<div class="col">
-		  <img class="logo" src="logos/netflix.jpg" alt="${sub.name} Logo">
-		</div>
-		<div class="col">
-		  <h3>${sub.name}</h3>
-		  <div>${sub.cost}</div>
-		</div>
-		<div class="col">
-		  <h3>Renews:</h3>
-
-		  <div>${dateFormatted}</div>
-		</div>
-		<div class="col">
-		  <h3>Interval:</h3>
-		  <div>${sub.interval}</div>
-		</div>
-	  </span>`);
-	}
 
 	_createEditCard(sub){
 		let date = sub.date.toDate();
@@ -251,7 +304,7 @@ rhit.SubscriptionPageController = class {
 
 		for (let i = 0; i < rhit.fbSubscriptionsManager.length; i++) {
 			const sub = rhit.fbSubscriptionsManager.getSubscriptionAtIndex(i);
-			const newCard = this._createCard(sub);
+			const newCard = _createCard(sub);
 			newCard.classList.add("inCardMode");
 			newCard.onclick = (event) => {
 				if(!!document.querySelector(".inEditMode")){
@@ -420,37 +473,35 @@ rhit.checkForRedirects = function() {
 
 rhit.CalendarCreator = class {
 	constructor() {
-		console.log("hello?");
-		var calendarEl = document.getElementById('calendar');
-		console.log("hello?");
-		var calendar = new FullCalendar.Calendar(calendarEl, {
+		this.calendarEl = document.getElementById('calendar');
+		this.calendar = new FullCalendar.Calendar(this.calendarEl, {
 		  initialView: 'dayGridMonth',
 		  navLinks: true,
 		  navLinkDayClick: function() {
 			window.location.href = "/manage.html"//Replace with close up of day with all subscriptions
 		  },
 		  eventClick: function(eventInfo) {
-		
 			window.location.href = "/manage.html"
 		  }
 		});
-		console.log("hello?");
-		calendar.addEvent({
-				title: 'Netflix',
-				start: '2021-08-12',
-				end: '2021-08-12'
-		});
-		calendar.addEvent({
-			title: 'Amazon',
-			start: '2021-08-14',
-			end: '2021-08-14'
+		this.calendar.render();
+	}
+
+	addEvent(name, subDate) {
+		let date = subDate.toDate();
+		//https://stackoverflow.com/questions/11591854/format-date-to-mm-dd-yyyy-in-javascript
+		let dateFormatted = date.getFullYear() + '-' + ((date.getMonth() > 8) ? (date.getMonth() + 1) : ('0' + (date.getMonth() + 1))) + '-' + ((date.getDate() > 9) ? date.getDate() : ('0' + date.getDate()));
+		this.calendar.addEvent({
+			title: name,
+			start: dateFormatted,
+			end: dateFormatted
 	});
-		calendar.render();
 	}
 }
 
 rhit.initializePage = function(){
 	if (document.querySelector("#mainPage")) {
+		rhit.fbMainPageSubscriptionsManager = new rhit.MainPageSubscriptions(rhit.fbAuthManager.uid)
 		new rhit.MainPageController();
 	}
 	if (document.querySelector("#subscriptionPage")) {
