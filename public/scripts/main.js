@@ -280,6 +280,11 @@ rhit.AccountPageController = class {
 		document.querySelector("#signOut").onclick = (event) => {
 			rhit.fbAuthManager.signOut();
 		}
+		document.querySelector("#deleteAccountModal").onclick = (event) => {
+			rhit.fbAuthManager.deleteAccount();
+
+		};
+
 		rhit.fbAccountManager.beginListening(this.updateView.bind(this));
 	}
 
@@ -316,7 +321,7 @@ rhit.FbAuthManager = class {
 	signIn() {
 		console.log("login");
 
-		Rosefire.signIn("6d2940da-c084-494f-920e-89dc67d673a2", (err, rfUser) => {
+		return Rosefire.signIn("6d2940da-c084-494f-920e-89dc67d673a2", (err, rfUser) => {
 		if (err) {
 	 	 	console.log("Rosefire error!", err);
 	  		return;
@@ -324,6 +329,28 @@ rhit.FbAuthManager = class {
 		console.log("Rosefire success!", rfUser);
 
 		firebase.auth().signInWithCustomToken(rfUser.token).catch((rror) => {
+			const errorCode = error.code;
+			const errorMessage = error.message;
+			if (errorCode === 'auth/invalid-custom-token') {
+				alert('The token you provided is not valid.');
+			} else{
+				console.error("custom auth error", errorCode, errorMessage);
+			}
+		});
+  		});	
+	}
+
+	deleteAccount() {
+		return Rosefire.signIn("6d2940da-c084-494f-920e-89dc67d673a2", (err, rfUser) => {
+		if (err) {
+	 	 	console.log("Rosefire error!", err);
+	  		return;
+		}
+		console.log("Rosefire success!", rfUser);
+
+		firebase.auth().signInWithCustomToken(rfUser.token).then(() => {
+			this._user.delete()
+		}).catch((rror) => {
 			const errorCode = error.code;
 			const errorMessage = error.message;
 			if (errorCode === 'auth/invalid-custom-token') {
