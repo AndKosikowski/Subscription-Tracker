@@ -351,6 +351,11 @@ rhit.AccountPageController = class {
 				document.querySelector("#accountReminderPhone").checked,
 				document.querySelector("#accountReminderEmail").checked
 			);
+			let emailChanged = firebase.functions().httpsCallable('emailChanged');
+			emailChanged();
+			// if(document.querySelector("#accountPhone").value != null){
+			// 	phoneChanged({number: 4});
+			// }
 		};
 		document.querySelector("#signOut").onclick = (event) => {
 			rhit.fbAuthManager.signOut();
