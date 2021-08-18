@@ -3,6 +3,7 @@ const admin = require('firebase-admin');
 const express = require('express');
 var nodemailer = require('nodemailer');
 const Vonage = require('@vonage/server-sdk');
+const twilio = require('twilio');
 const cors = require('cors');
 admin.initializeApp();
 // // Create and Deploy Your First Cloud Functions
@@ -20,10 +21,24 @@ const vonage = new Vonage({
     apiSecret: "W4ek0CZHtvlESqFm"
   });
 
+// const accountSid = 'AC47eaedf59dc1cf4865e2d7594b8d266f'; // Your Account SID from www.twilio.com/console
+// const authToken = 'bbb9183d8c85ffacbcedd00ebe3d8d50'; 
+
+// const client = new twilio(accountSid, authToken);
+
+
 app.get("/phoneChanged/:number/:name/", (request, response) =>{
     const to = request.params.number;
+
     const name = request.params.name;
     const text = `Hey ${name}, we're just verifying your phone number`;
+    // client.messages
+    // .create({
+    // body: text,
+    // to: to, // Text this number
+    // from: '+16308845176', // From a valid Twilio number
+    // })
+    // .then((message) => console.log(message.sid));
     vonage.message.sendSms(from, to, text, (err, responseData) => {
         if (err) {
             console.log(err);

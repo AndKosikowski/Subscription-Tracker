@@ -16,7 +16,8 @@
     "@vonage/server-sdk": "^2.10.10",
     "firebase-admin": "^9.8.0",
     "firebase-functions": "^3.15.4",
-    "nodemailer": "^6.6.3"
+    "nodemailer": "^6.6.3",
+    "twilio": "^3.67.0"
   },
   "devDependencies": {
     "firebase-functions-test": "^0.2.0"
