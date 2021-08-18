@@ -419,7 +419,7 @@ rhit.AccountPageController = class {
 				name = "user";
 			}
 			let remindPhone = document.querySelector("#accountReminderPhone").checked;
-			let remindEmail = document.querySelector("#accountReminderEmail").checked
+			let remindEmail = document.querySelector("#accountReminderEmail").checked;
 
 			let email = document.querySelector("#accountEmail").value;
 			let phone = document.querySelector("#accountPhone").value;
