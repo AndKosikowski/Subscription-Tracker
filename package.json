@@ -1,7 +1,6 @@
 {
   "name": "subscription-tracker",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "dependencies": {
     "@vonage/server-sdk": "^2.10.10",
@@ -21,5 +20,7 @@
   "bugs": {
     "url": "https://github.com/rhit-csse280/Subscription-Tracker/issues"
   },
-  "homepage": "https://github.com/rhit-csse280/Subscription-Tracker#readme"
+  "homepage": "https://github.com/rhit-csse280/Subscription-Tracker#readme",
+  "devDependencies": {},
+  "description": ""
 }

@@ -351,11 +351,29 @@ rhit.AccountPageController = class {
 				document.querySelector("#accountReminderPhone").checked,
 				document.querySelector("#accountReminderEmail").checked
 			);
-			let emailChanged = firebase.functions().httpsCallable('emailChanged');
-			emailChanged();
-			// if(document.querySelector("#accountPhone").value != null){
-			// 	phoneChanged({number: 4});
-			// }
+			let name = document.querySelector("#accountName").value;
+			if(name == null || name.length == 0){
+				name = "user";
+			}
+			let remindPhone = document.querySelector("#accountReminderPhone").checked;
+			let remindEmail = document.querySelector("#accountReminderEmail").checked
+
+			let email = document.querySelector("#accountEmail").value;
+			let phone = document.querySelector("#accountPhone").value;
+			if(email != null && email.length != 0 && remindEmail){
+				fetch(`https://us-central1-subscription-tracker-9d598.cloudfunctions.net/api/emailChanged/${email}/${name}`).then(response => console.log(response.json()))
+				.then((data) => {
+				console.log("success");
+				})
+				alert("We sent you an email to confirm your email address");
+			}
+			if(phone != null && phone.length != 0 && remindPhone){
+				fetch(`https://us-central1-subscription-tracker-9d598.cloudfunctions.net/api/phoneChanged/${phone}/${name}`).then(response => console.log(response.json()))
+				.then((data) => {
+				console.log("success");
+				})
+				alert("We sent you a text to confirm your phone number");
+			}
 		};
 		document.querySelector("#signOut").onclick = (event) => {
 			rhit.fbAuthManager.signOut();
