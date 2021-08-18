@@ -153,6 +153,23 @@ svg{
     max-width: 85vw;
 }
 
+#inputImageLabel{
+    top: 0;
+    bottom: 50px;
+    position:relative;
+}
+
+#editImageLabel{
+    top: 0;
+    bottom: 50px;
+    position:relative;
+}
+
+#subImage{
+    text-overflow:initial;
+}
+
+
 .subscription{
     border: 5px;
     border-color: #800000;

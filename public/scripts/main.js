@@ -15,6 +15,7 @@ rhit.FB_KEY_EMAIL = "Email";
 rhit.FB_KEY_PHONE = "Phone";
 rhit.FB_KEY_REMIND_EMAIL = "RemindEmail";
 rhit.FB_KEY_REMIND_TEXT = "RemindText";
+rhit.FB_KEY_ICON = "Icon";
 rhit.fbAuthManager = null;
 rhit.fbAccountManager = null;
 rhit.fbSubscriptionsManager = null;
@@ -30,13 +31,13 @@ function htmlToElement(html) {
 	return template.content.firstChild;
 }
 
-function _createCard(sub){
+function _createCard(sub,url){
 	let date = sub.date.toDate();
 	//https://stackoverflow.com/questions/11591854/format-date-to-mm-dd-yyyy-in-javascript
 	let dateFormatted = ((date.getMonth() > 8) ? (date.getMonth() + 1) : ('0' + (date.getMonth() + 1))) + '/' + ((date.getDate() > 9) ? date.getDate() : ('0' + date.getDate())) + '/' + date.getFullYear();
 	return htmlToElement(`<span class="row flex-nowrap subscription" data-doc-id="${sub.id}>
 	<div class="col">
-	  <img class="logo" src="logos/netflix.jpg" alt="${sub.name} Logo">
+	  <img class="logo" src="${url}" alt="${sub.name} Logo">
 	</div>
 	<div class="col">
 	  <h3>${sub.name}</h3>
@@ -55,18 +56,20 @@ function _createCard(sub){
 }
 
 rhit.Subscription = class{
-	constructor(id,name,cost,interval,date){
+	constructor(id,name,cost,interval,date,icon){
 		this.id = id;
 		this.name = name;
 		this.cost = cost;
 		this.interval = interval;
 		this.date = date;
+		this.icon = icon;
 	}
 }
 
 rhit.MainPageSubscriptions = class{
 	constructor(uid) {
 		this._uid = uid;
+		this._storageRef = firebase.storage().ref();
 		this._documentSnapshots = [];
 		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_USERS).doc(this._uid).collection(rhit.FB_COLLECTION_SUBSCRIPTIONS);
 		this._unsubscribe = null;
@@ -93,7 +96,8 @@ rhit.MainPageSubscriptions = class{
 			docSnapshot.get(rhit.FB_KEY_NAME),
 			docSnapshot.get(rhit.FB_KEY_COST),
 			docSnapshot.get(rhit.FB_KEY_INTERVAL),
-			docSnapshot.get(rhit.FB_KEY_RENEWAL_DATE));
+			docSnapshot.get(rhit.FB_KEY_RENEWAL_DATE),
+			docSnapshot.get(rhit.FB_KEY_ICON));
 		return sub;
 	}
 
@@ -156,17 +160,29 @@ rhit.SubscriptionsManager = class {
 	constructor(uid) {
 		this._uid = uid;
 		this._documentSnapshots = [];
+		this._storageRef = firebase.storage().ref();
 		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_USERS).doc(this._uid).collection(rhit.FB_COLLECTION_SUBSCRIPTIONS);
 		this._unsubscribe = null;
 	}
 
-	add(name,cost,date,interval) {
+	add(name,cost,date,interval,icon) {
 		let d = date.split('-');
+		let imageRef = null;
+		let iconName = null;
+		if(icon == null){
+			iconName = "noicon.jpg";
+		}else{
+			imageRef = this._storageRef.child(`${this._uid}/${icon.name}`);
+			imageRef.put(icon);
+			iconName = icon.name;
+		}
+
 		this._ref.add({
 			[rhit.FB_KEY_NAME]: name,
 			[rhit.FB_KEY_COST]: cost,
 			[rhit.FB_KEY_INTERVAL]: interval,
 			[rhit.FB_KEY_RENEWAL_DATE]: firebase.firestore.Timestamp.fromDate(new Date(d[0],d[1]-1,d[2])),
+			[rhit.FB_KEY_ICON]: iconName,
 			[rhit.FB_KEY_LAST_TOUCHED]: firebase.firestore.Timestamp.now()
 		})
 		.then(function (docRef) {
@@ -180,7 +196,7 @@ rhit.SubscriptionsManager = class {
 	beginListening(changeListener) {
 		this._unsubscribe = this._ref.onSnapshot((querySnapshot) => {
 			this._documentSnapshots = querySnapshot.docs;
-			changeListener();
+			setTimeout(changeListener(),1000);
 		});
 	}
 
@@ -188,15 +204,31 @@ rhit.SubscriptionsManager = class {
 		this._unsubscribe();
 	}
 
-	update(id,name,cost,date,interval){
-		let d = date.split('-')
-		this._ref.doc(id).update({
-			[rhit.FB_KEY_COST]: cost,
-			[rhit.FB_KEY_NAME]: name,
-			[rhit.FB_KEY_RENEWAL_DATE]: firebase.firestore.Timestamp.fromDate(new Date(d[0],d[1]-1,d[2])),
-			[rhit.FB_KEY_INTERVAL]: interval,
-			[rhit.FB_KEY_LAST_TOUCHED]: firebase.firestore.Timestamp.now(),
-		})
+	update(id,name,cost,date,interval,icon){
+		let d = date.split('-');
+
+		if(icon == null){
+			this._ref.doc(id).update({
+				[rhit.FB_KEY_COST]: cost,
+				[rhit.FB_KEY_NAME]: name,
+				[rhit.FB_KEY_RENEWAL_DATE]: firebase.firestore.Timestamp.fromDate(new Date(d[0],d[1]-1,d[2])),
+				[rhit.FB_KEY_INTERVAL]: interval,
+				[rhit.FB_KEY_LAST_TOUCHED]: firebase.firestore.Timestamp.now(),
+			})
+		}else{
+			let imageRef = this._storageRef.child(`${this._uid}/${icon.name}`);
+			imageRef.put(icon);
+			this._ref.doc(id).update({
+				[rhit.FB_KEY_COST]: cost,
+				[rhit.FB_KEY_NAME]: name,
+				[rhit.FB_KEY_RENEWAL_DATE]: firebase.firestore.Timestamp.fromDate(new Date(d[0],d[1]-1,d[2])),
+				[rhit.FB_KEY_INTERVAL]: interval,
+				[rhit.FB_KEY_ICON]: icon.name,
+				[rhit.FB_KEY_LAST_TOUCHED]: firebase.firestore.Timestamp.now(),
+			})
+		}
+
+
 	}
 
 	delete(docID) {
@@ -213,7 +245,8 @@ rhit.SubscriptionsManager = class {
 			docSnapshot.get(rhit.FB_KEY_NAME),
 			docSnapshot.get(rhit.FB_KEY_COST),
 			docSnapshot.get(rhit.FB_KEY_INTERVAL),
-			docSnapshot.get(rhit.FB_KEY_RENEWAL_DATE));
+			docSnapshot.get(rhit.FB_KEY_RENEWAL_DATE),
+			docSnapshot.get(rhit.FB_KEY_ICON));
 		return sub;
 	}
 }
@@ -230,9 +263,17 @@ rhit.MainPageController = class {
 
 		for (let i = 0; i < rhit.fbMainPageSubscriptionsManager.length; i++) {
 			const sub = rhit.fbMainPageSubscriptionsManager.getSubscriptionAtIndex(i);
-			const newCard = _createCard(sub);
-			rhit.calendarManager.addEvent(sub.name,sub.date);
-			newList.appendChild(newCard);
+			let imgURL = null;
+			if(sub.icon == "noicon.jpg"){
+				imgURL = "noicon.jpg";
+			}else{
+				imgURL = `${rhit.fbAuthManager.uid}/${sub.icon}`;
+			}
+			firebase.storage().ref().child(imgURL).getDownloadURL().then((url) => {
+				const newCard = _createCard(sub,url);
+				rhit.calendarManager.addEvent(sub.name,sub.date);
+				newList.appendChild(newCard);
+			});
 		}
 
 		const oldList = document.querySelector("#subscriptionListContainer");
@@ -250,18 +291,28 @@ rhit.SubscriptionPageController = class {
 			const cost = document.querySelector("#inputCost").value;
 			const date = document.querySelector("#inputDate").value;
 			const interval = document.querySelector("#inputInterval").value;
-			rhit.fbSubscriptionsManager.add(name,cost,date,interval);
+			const icon = document.querySelector("#inputImage").files[0];
+			if(name.length == 0 || cost.length == 0 || date.length == 0 || interval.length == 0){
+				alert("One of the necessary fields is still empty");
+			}else{
+				rhit.fbSubscriptionsManager.add(name,cost,date,interval,icon);
+				document.querySelector("#closeAddSubscription").click();
+			}
 		}
 		rhit.fbSubscriptionsManager.beginListening(this.updateView.bind(this));
 	}
 
 
-	_createEditCard(sub){
+	_createEditCard(sub,url){
 		let date = sub.date.toDate();
 		//https://stackoverflow.com/questions/11591854/format-date-to-mm-dd-yyyy-in-javascript
 		let dateFormatted = date.getFullYear() + '-' + ((date.getMonth() > 8) ? (date.getMonth() + 1) : ('0' + (date.getMonth() + 1))) + '-' + ((date.getDate() > 9) ? date.getDate() : ('0' + date.getDate()));
-		return htmlToElement(`<span class="row align-items-start flex-nowrap subscription" data-doc-id="${sub.id}>
-		<div class="col"> <img class="logo" src="logos/netflix.jpg" alt="${sub.name} Logo"> </div>
+		return htmlToElement(`<span class="row align-items-start flex-nowrap subscription" data-doc-id="${sub.id}">
+		<div class="col">
+			<img class="logo" id="currentLogo" src="${url}" alt="${sub.name} Logo">
+			<label for="subImage" class="bmd-label-floating" id="editImageLabel">Change Image</label>
+			<input type="file" class="form-control-file" id="subImage" accept=".png,.jpg,.jpeg"></input>
+		</div>
 		<div class="col">
 		  <div class="form-group">
 			<label for="subName" class="bmd-label-floating"></label>
@@ -300,13 +351,21 @@ rhit.SubscriptionPageController = class {
 	}
 
 	updateView(){
+		setTimeout(() => {
 		const newList = htmlToElement('<div id="subscriptionListContainer"></div>');
 
 		for (let i = 0; i < rhit.fbSubscriptionsManager.length; i++) {
 			const sub = rhit.fbSubscriptionsManager.getSubscriptionAtIndex(i);
-			const newCard = _createCard(sub);
-			newCard.classList.add("inCardMode");
-			newCard.onclick = (event) => {
+			let imgURL = null;
+			if(sub.icon == "noicon.jpg"){
+				imgURL = "noicon.jpg";
+			}else{
+				imgURL = `${rhit.fbAuthManager.uid}/${sub.icon}`;
+			}
+			firebase.storage().ref().child(imgURL).getDownloadURL().then((url) => {
+				const newCard = _createCard(sub,url);
+				newCard.classList.add("inCardMode");
+				newCard.onclick = (event) => {
 				if(!!document.querySelector(".inEditMode")){
 					document.querySelector(".inEditMode").remove();
 					let hiddenEls = document.getElementsByClassName("inCardMode");
@@ -314,7 +373,7 @@ rhit.SubscriptionPageController = class {
 						hiddenEls[j].hidden = false;
 					}
 				}
-				const newEditCard = this._createEditCard(sub);
+				const newEditCard = this._createEditCard(sub,url);
 				newEditCard.classList.add("inEditMode");
 				newList.insertBefore(newEditCard, newCard);
 				newCard.hidden = true;
@@ -325,6 +384,7 @@ rhit.SubscriptionPageController = class {
 						document.querySelector("#subCost").value,
 						document.querySelector("#subRenewDate").value,
 						document.querySelector("#subInterval").value,
+						document.querySelector("#subImage").files[0]
 						)
 				}
 				document.querySelector("#deleteSubscriptionModal").onclick = (event) => {
@@ -333,13 +393,16 @@ rhit.SubscriptionPageController = class {
 
 			}
 			newList.appendChild(newCard);
+			});
+			
 		}
 
 		const oldList = document.querySelector("#subscriptionListContainer");
 		oldList.parentElement.insertBefore(newList,oldList)
 		oldList.remove();
-
+		},500);
 	}
+	
 }
 
 rhit.AccountPageController = class {
@@ -387,6 +450,7 @@ rhit.AccountPageController = class {
 	}
 
 	updateView(){
+
 		if(rhit.fbAccountManager.name){
 			document.querySelector("#accountName").value = rhit.fbAccountManager.name;
 			document.querySelector("#accountName").parentElement.classList.add("is-filled");
