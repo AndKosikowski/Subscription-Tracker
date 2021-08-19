@@ -308,13 +308,13 @@ rhit.SubscriptionPageController = class {
 		//https://stackoverflow.com/questions/11591854/format-date-to-mm-dd-yyyy-in-javascript
 		let dateFormatted = date.getFullYear() + '-' + ((date.getMonth() > 8) ? (date.getMonth() + 1) : ('0' + (date.getMonth() + 1))) + '-' + ((date.getDate() > 9) ? date.getDate() : ('0' + date.getDate()));
 		return htmlToElement(`<span class="row align-items-start flex-nowrap subscription" data-doc-id="${sub.id}">
-		<div class="col">
+		<div class="col editCol">
 			<img class="logo" id="currentLogo" src="${url}" alt="${sub.name} Logo">
 			<label for="subImage" class="bmd-label-floating" id="editImageLabel">Change Image</label>
 			<input type="file" class="form-control-file" id="subImage" accept=".png,.jpg,.jpeg"></input>
 		</div>
-		<div class="col">
-		  <div class="form-group">
+		<div class="col editCol">
+		  <div class="form-group" style="top: 21px;">
 			<label for="subName" class="bmd-label-floating"></label>
 			<input type="subName" class="form-control" id="subName" value="${sub.name}">
 		  </div>
@@ -323,28 +323,28 @@ rhit.SubscriptionPageController = class {
 			<input type="cost" class="form-control" id="subCost" value="${sub.cost}">
 		  </div>
 		</div>
-		<div class="col">
-		  <div class="form-group top-row">
-			<label for="renewDate" class="bmd-label-floating"></label>
+		<div class="col editCol">
+		  <div class="form-group top-row"">
+			<label for="renewDate" class="bmd-label-floating" style="display: block" ></label>
 			<input type="date" class="form-control" id="subRenewDate" value="${dateFormatted}">
 		  </div>
 		  <button type="button" id="updateSubscription"class="btn">Update</button>
 		</div>
-		<div class="col">
+		<div class="col editCol">
 		  <div class="form-group">
 			<select type="name" class="form-control" id="subInterval" value="${sub.interval}">
 			  <option value="monthly">Monthly</option>
 			  <option value="yearly">Yearly</option>
 			</select>
 		  </div>
-		  <br>
-		  <i class="bi bi-trash"></i>
+		  <div style="height: 20px;">
 		  <button type="button" class="btn btn-outline-danger" id="deleteSubscription"class="btn" data-toggle="modal" data-target="#deleteModal">
 			<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
 			  <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"></path>
 			  <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"></path>
 			</svg>
 		  </button>
+		  </div>
 		</div>
 	  </span>`);
 

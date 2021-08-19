@@ -15,6 +15,17 @@ body {
 .logo{
     width: 100px;
     height: 100px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.form-control-file{
+    font-size: 18px;
+    overflow-wrap:normal;
+    word-wrap: break-word;
+    margin-right: auto;
+    margin-left: auto;
+    overflow:hidden;
 }
 
 /* span.row{
@@ -44,6 +55,8 @@ body {
     width: 20vw;
     display: inline;
     text-align: center;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .col div {
@@ -51,10 +64,14 @@ body {
     font-weight: bolder;
     position: relative;
     top: 15px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .col {
     padding: 0 5px;
+    flex-direction: column;
+    display: flex;
 }
 
 
@@ -96,16 +113,34 @@ body {
     background: blue;
     color: white;
     position: relative;
-    top: 40px;
+    top: 1px;
+    flex-shrink: 0;
+    flex-grow: 0;
 }
 
+#subInterval{
+    top: 4px;
+}
+
+#subRenewDate{
+    display: block;
+    top: 0px;
+    bottom: 30px !important;
+}
 
 #deleteSubscription {
-    /* display: block;
-    margin: auto;
-    background: darkred;
-    color: white; */
     font-size: 1.5rem;
+    padding: 2px 0px;
+    flex-basis: 50%;
+    flex-shrink: 0;
+    flex-grow: 0;
+    position: relative;
+    top: 35px;
+    width: 50px;
+    height: 50px;
+    box-sizing:border-box;
+    margin-right: auto;
+    margin-left: auto;
 }
 
 #fab {
@@ -210,7 +245,16 @@ svg{
 #subscriptionPage .col .form-control{
     text-align: center;
     position: relative;
+    display: block;
     bottom: 30px;
+    flex-basis: 50%;
+    flex-shrink: 0;
+    flex-grow: 0;
+}
+
+.editCol{
+    height:282px;
+    box-sizing:border-box;
 }
 
 .top-row {
@@ -230,6 +274,20 @@ svg{
 }
 
 @media (max-width: 576px){
+    .form-control-file{
+        font-size: 16px;
+        height: 40px;
+    }
+
+    #subscriptionPage .col .form-group{
+        /* margin: 20px 10px; */
+        width: 18vw;
+    }
+
+    #updateSubscription {
+        font-size: 14px;
+    }
+
     .col h3 {
         font-size: 18px;
     }
