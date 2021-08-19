@@ -39,6 +39,7 @@ body {
     color: purple;
     font-weight: bolder;
     white-space: nowrap;
+    font-size: 1.17em;
     overflow: hidden;
     width: 20vw;
     display: inline;
@@ -181,7 +182,7 @@ svg{
 
 
 .subscription{
-    border: 5px;
+    border-width: 5px;
     border-color: #800000;
     border-style: solid;
     padding: 10px 5px;
@@ -219,4 +220,42 @@ svg{
 
 .date-shift{
     left: 70px;
+}
+
+@media (max-width: 510px){
+    .container{
+        padding-top: 20px;
+    }
+
+}
+
+@media (max-width: 576px){
+    .col h3 {
+        font-size: 18px;
+    }
+
+    .col div{
+        font-size: 16px;
+        top: 5px;
+    }
+
+    #mainPage.container{
+        max-width: 95vw;
+    }
+
+    .logo{
+        width: 60px;
+        height: 60px;
+    }
+
+    .col{
+        max-width: 22vw;
+    }
+
+    .subscription{
+        border-width: 3px;
+        padding: 6px 3px;
+        text-align: center;
+        margin: 10px 0px;
+    }
 }
