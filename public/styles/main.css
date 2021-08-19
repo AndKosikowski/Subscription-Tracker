@@ -159,6 +159,12 @@ svg{
     position:relative;
 }
 
+#inputDateLabel{
+    top: 0;
+    bottom: 50px;
+    position:relative;
+}
+
 #editImageLabel{
     top: 0;
     bottom: 50px;

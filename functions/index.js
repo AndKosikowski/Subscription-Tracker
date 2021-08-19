@@ -170,17 +170,6 @@ app.get("/emailChanged/:email/:name/", (request, response) => {
 })
 
 
-// exports.emailChanged = functions.https.onRequest((req, res) => {
-
-// });
-
-// exports.phoneChanged = functions.https.onCall((data, context) => {
-//     const number = data.number;
-//     functions.logger.log(number);
-
-// });
-
-
 exports.userDeleted = functions.auth.user().onDelete(user => {
     const doc = admin.firestore().collection('Users').doc(user.uid);
     return doc.delete();
