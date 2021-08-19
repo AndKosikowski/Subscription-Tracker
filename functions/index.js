@@ -24,14 +24,10 @@ exports.scheduledFunction = functions.pubsub.schedule('every 24 hours').onRun( a
   let usersRef = db.collection("Users");
   let documentSnapshots = null;
 
-  functions.logger.log("Do I even run?")
 
   let snapshot = await usersRef.get();
 
   snapshot.forEach(async (doc) => {
-    functions.logger.log("Do I even run??")
-    functions.logger.log(doc);
-    functions.logger.log(doc.data());
     let emailNotifications = doc.data().RemindEmail;
     let phoneNotifications = doc.data().RemindText;
     let email = null;
@@ -46,7 +42,6 @@ exports.scheduledFunction = functions.pubsub.schedule('every 24 hours').onRun( a
         }
     }
     functions.logger.log(email);
-    if(phone || email){
         let subsRef = await doc.ref.collection("Subscriptions").get();
         subsRef.forEach( async (subDoc) => {
             let renewalDate = subDoc.data().Renewal.toDate();
@@ -100,7 +95,6 @@ exports.scheduledFunction = functions.pubsub.schedule('every 24 hours').onRun( a
               let nextDate = null;
               if(renewalInterval.toUpperCase().localeCompare("MONTH")){
                 nextDate = momentRenewalDate.add(1, 'M');
-                functions.logger.log(`Next date will be: ${nextDate.toDate()}`)
               }else{
                 nextDate = momentRenewalDate.add(1, 'y');
               }
@@ -110,7 +104,6 @@ exports.scheduledFunction = functions.pubsub.schedule('every 24 hours').onRun( a
             }
 
         })
-      }
     
   });
   return null;
