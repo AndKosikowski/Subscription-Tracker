@@ -495,7 +495,8 @@ rhit.FbAuthManager = class {
 		}
 		console.log("Rosefire success!", rfUser);
 
-		firebase.auth().signInWithCustomToken(rfUser.token).catch((rror) => {
+		firebase.auth().signInWithCustomToken(rfUser.token)
+		.catch((rror) => {
 			const errorCode = error.code;
 			const errorMessage = error.message;
 			if (errorCode === 'auth/invalid-custom-token') {
@@ -592,6 +593,24 @@ rhit.CalendarCreator = class {
 }
 
 rhit.initializePage = function(){
+
+	if(rhit.fbAuthManager.isSignedIn){
+	const usersRef = firebase.firestore().collection("Users").doc(rhit.fbAuthManager.uid);
+	usersRef.get()
+	  .then((docSnapshot) => {
+	   if (!(docSnapshot.exists)) {
+		usersRef.set({[rhit.FB_KEY_NAME]: null,
+			[rhit.FB_KEY_EMAIL]: null,
+			[rhit.FB_KEY_PHONE]: null,
+			[rhit.FB_KEY_REMIND_EMAIL]: false,
+			[rhit.FB_KEY_REMIND_TEXT]: false,
+			[rhit.FB_KEY_LAST_TOUCHED]: firebase.firestore.Timestamp.now(),
+
+		  });
+	} 
+	});
+	}
+
 	if (document.querySelector("#mainPage")) {
 		rhit.fbMainPageSubscriptionsManager = new rhit.MainPageSubscriptions(rhit.fbAuthManager.uid)
 		new rhit.MainPageController();

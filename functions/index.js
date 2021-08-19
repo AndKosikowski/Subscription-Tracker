@@ -3,8 +3,10 @@ const admin = require('firebase-admin');
 const express = require('express');
 var nodemailer = require('nodemailer');
 const Vonage = require('@vonage/server-sdk');
-const twilio = require('twilio');
+const later = require('later');
+var moment = require('moment');
 const cors = require('cors');
+moment().format();
 admin.initializeApp();
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
@@ -13,7 +15,106 @@ admin.initializeApp();
 const app = express();
 app.use(cors({origin: true}));
 
+const db = admin.firestore();
+
 const from = "18337907816";
+
+exports.scheduledFunction = functions.pubsub.schedule('every 24 hours').onRun( async (context) => {
+  
+  let usersRef = db.collection("Users");
+  let documentSnapshots = null;
+
+  functions.logger.log("Do I even run?")
+
+  let snapshot = await usersRef.get();
+
+  snapshot.forEach(async (doc) => {
+    functions.logger.log("Do I even run??")
+    functions.logger.log(doc);
+    functions.logger.log(doc.data());
+    let emailNotifications = doc.data().RemindEmail;
+    let phoneNotifications = doc.data().RemindText;
+    let email = null;
+    let phone = null;
+    let userName = null;
+    if(emailNotifications || phoneNotifications){
+        email = doc.data().Email;
+        phone = doc.data().Phone;
+        userName = doc.data().Name;
+        if(userName == null || userName.length == 0){
+          userName = "user";
+        }
+    }
+    functions.logger.log(email);
+    if(phone || email){
+        let subsRef = await doc.ref.collection("Subscriptions").get();
+        subsRef.forEach( async (subDoc) => {
+            let renewalDate = subDoc.data().Renewal.toDate();
+            let momentRenewalDate = moment.utc(renewalDate);
+            let currentDate = new moment.utc();
+            functions.logger.log(`moment: ${momentRenewalDate}`);
+            functions.logger.log(`moment: ${momentRenewalDate}`);
+            if(momentRenewalDate.isSame(currentDate.add(1, 'd'), 'd')){
+              text = `Hello ${userName}, your ${subDoc.data().Name} subscription is about to renew!`;
+              if(phone){
+                vonage.message.sendSms(from, phone, text, (err, responseData) => {
+                  if (err) {
+                      functions.logger.log(err);
+                  } else {
+                      if(responseData.messages[0]['status'] === "0") {
+                          functions.logger.log("Message sent successfully.");
+                      } else {
+                          functions.logger.log(`Message failed with error: ${responseData.messages[0]['error-text']}`);
+                      }
+                  }
+                });
+              }
+              if(email){
+                var transporter = nodemailer.createTransport({
+                  service: 'hotmail',
+                  auth: {
+                    user: 'subscriptiontracker@hotmail.com',
+                    pass: 'SuperSecret420'
+                  }
+                });
+      
+                var mailOptions = {
+                  from: 'subscriptiontracker@hotmail.com',
+                  to: email,
+                  subject: 'Subscription Tracker Email Verification',
+                  text: text
+                };
+      
+                transporter.sendMail(mailOptions, function(error, info){
+                  if (error) {
+                  functions.logger.log(error);
+                  } else {
+                    functions.logger.log('Email sent: ' + info.response);
+                  }
+                });
+              }
+            }
+            else if(momentRenewalDate.diff(currentDate) < 0){
+              functions.logger.log(`Attempt to update renewal of: ${subDoc.data().Name}`)
+              let renewalInterval = subDoc.data().Interval;
+              let nextDate = null;
+              if(renewalInterval.toUpperCase().localeCompare("MONTH")){
+                nextDate = momentRenewalDate.add(1, 'M');
+                functions.logger.log(`Next date will be: ${nextDate.toDate()}`)
+              }else{
+                nextDate = momentRenewalDate.add(1, 'y');
+              }
+
+              functions.logger.log(`Next date will be: ${nextDate.toDate()}`)
+              subDoc.ref.update({Renewal: admin.firestore.Timestamp.fromDate(nextDate.toDate())});
+            }
+
+        })
+      }
+    
+  });
+  return null;
+});
 
 
 const vonage = new Vonage({
@@ -21,10 +122,9 @@ const vonage = new Vonage({
     apiSecret: "W4ek0CZHtvlESqFm"
   });
 
-// const accountSid = 'AC47eaedf59dc1cf4865e2d7594b8d266f'; // Your Account SID from www.twilio.com/console
-// const authToken = 'bbb9183d8c85ffacbcedd00ebe3d8d50'; 
+// app.get("/updateSubscriptions", async (request, response) =>{
 
-// const client = new twilio(accountSid, authToken);
+// });
 
 
 app.get("/phoneChanged/:number/:name/", (request, response) =>{
@@ -32,21 +132,14 @@ app.get("/phoneChanged/:number/:name/", (request, response) =>{
 
     const name = request.params.name;
     const text = `Hey ${name}, we're just verifying your phone number`;
-    // client.messages
-    // .create({
-    // body: text,
-    // to: to, // Text this number
-    // from: '+16308845176', // From a valid Twilio number
-    // })
-    // .then((message) => console.log(message.sid));
     vonage.message.sendSms(from, to, text, (err, responseData) => {
         if (err) {
-            console.log(err);
+            functions.logger.log(err);
         } else {
             if(responseData.messages[0]['status'] === "0") {
-                console.log("Message sent successfully.");
+                functions.logger.log("Message sent successfully.");
             } else {
-                console.log(`Message failed with error: ${responseData.messages[0]['error-text']}`);
+                functions.logger.log(`Message failed with error: ${responseData.messages[0]['error-text']}`);
             }
         }
     });
@@ -74,9 +167,9 @@ app.get("/emailChanged/:email/:name/", (request, response) => {
       
       transporter.sendMail(mailOptions, function(error, info){
         if (error) {
-          console.log(error);
+          functions.logger.log(error);
         } else {
-          console.log('Email sent: ' + info.response);
+          functions.logger.log('Email sent: ' + info.response);
         }
       });
 
@@ -90,7 +183,7 @@ app.get("/emailChanged/:email/:name/", (request, response) => {
 
 // exports.phoneChanged = functions.https.onCall((data, context) => {
 //     const number = data.number;
-//     console.log(number);
+//     functions.logger.log(number);
 
 // });
 
