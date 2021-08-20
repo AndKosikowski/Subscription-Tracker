@@ -45,10 +45,10 @@ exports.scheduledFunction = functions.pubsub.schedule('every 24 hours').onRun( a
         let subsRef = await doc.ref.collection("Subscriptions").get();
         subsRef.forEach( async (subDoc) => {
             let renewalDate = subDoc.data().Renewal.toDate();
-            let momentRenewalDate = moment.utc(renewalDate);
-            let currentDate = new moment.utc();
+            let momentRenewalDate = moment(renewalDate);
+            let currentDate = new moment().subtract(4, "hours");
             functions.logger.log(`moment: ${momentRenewalDate}`);
-            functions.logger.log(`moment: ${momentRenewalDate}`);
+            functions.logger.log(`current: ${currentDate}`);
             if(momentRenewalDate.isSame(currentDate.add(1, 'd'), 'd')){
               text = `Hello ${userName}, your ${subDoc.data().Name} subscription is about to renew!`;
               if(phone){
